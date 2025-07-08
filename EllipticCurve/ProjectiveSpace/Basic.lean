@@ -15,19 +15,20 @@ import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricPower
 * `ProjectiveSpace.functor`: the functor `R-Alg ⥤ Set` that sends `A` to `ℙ(A ⊗[R] M; A)`.
 -/
 
-universe u v
+universe u v w₁ w₂
 
-namespace AlgebraicGeometry
+namespace Module
 
 namespace ProjectiveSpace
 
 open CategoryTheory Grassmannian TensorProduct
 
 variable (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M]
+  (A : Type w₁) [CommRing A] [Algebra R A] (B : Type w₂) [CommRing B] [Algebra R B]
 
 /-- The projective space corresponding to the module `M` is the space of submodules `N` such that
 `M⧸N` is locally free of rank 1, i.e. invertible. -/
-abbrev AsType := G(M; R, 1)
+abbrev AsType := G(1, M; R)
 
 @[inherit_doc] scoped notation "ℙ("M"; "R")" => AsType R M
 
@@ -44,7 +45,7 @@ abbrev chart (x : M) : Set ℙ(M; R) :=
 variable {R M} in
 /-- Given `N ∈ chart R M x`, we have an isomorphism `M ⧸ N ≃ₗ[R] R` sending `x` to `1`. -/
 noncomputable def equivOfChart (x : M) {N : ℙ(M; R)} (hn : N ∈ chart R M x) :
-    (M ⧸ N.val) ≃ₗ[R] R :=
+    (M ⧸ N.toSubmodule) ≃ₗ[R] R :=
   Grassmannian.equivOfChart hn ≪≫ₗ LinearEquiv.funUnique (Fin 1) R R
 
 lemma equivOfChart_apply (x : M) {N : ℙ(M; R)} (hn : N ∈ chart R M x) :
@@ -52,6 +53,7 @@ lemma equivOfChart_apply (x : M) {N : ℙ(M; R)} (hn : N ∈ chart R M x) :
   rw [equivOfChart, LinearEquiv.trans_apply, Grassmannian.equivOfChart_apply (i:=0)]; rfl
 
 variable {R M}
+
 /-- "Division by `x`" is well-defined on the `chart` where "`x` is invertible". -/
 noncomputable def div (y x : M) (p : chart R M x) : R :=
   equivOfChart x p.2 (Submodule.Quotient.mk y)
@@ -69,7 +71,7 @@ lemma smul_div_apply (r : R) (y x : M) (p) : div (R:=R) (r • y) x p = r * div 
   congrFun (smul_div ..) p
 
 lemma div_smul_self (y x : M) (p) :
-    div (R:=R) y x p • Submodule.Quotient.mk (p:=p.1.val) x = Submodule.Quotient.mk y :=
+    div (R:=R) y x p • Submodule.Quotient.mk (p := p.1.toSubmodule) x = Submodule.Quotient.mk y :=
   (equivOfChart x p.2).injective <| by rw [map_smul, equivOfChart_apply, smul_eq_mul, mul_one, div]
 
 lemma div_self (x : M) : div (R:=R) x x = 1 :=
@@ -100,16 +102,36 @@ noncomputable abbrev chartToFunctor (R : CommRingCat.{u}) (M : ModuleCat.{v} R) 
     chartFunctor R M x ⟶ functor R M :=
   Grassmannian.chartToFunctor R M 1 (fun _ ↦ x)
 
+section zeros
+
 /-- `V(f)` the set of zeroes of the homogeneous polynomial `f` of degree `n`. -/
 def zeros {n : ℕ} (f : Sym[R]^n M) : Set ℙ(M; R) :=
   { N | f.map n (Submodule.mkQ N.1) = 0 }
 
+variable {n : ℕ} (f : Sym[R]^n M)
+
+theorem zeros_def (p : ℙ(M; R)) : p ∈ zeros f ↔ f.map n (Submodule.mkQ p.1) = 0 := Iff.rfl
+
+lemma baseChange_mem_zeros (p : ℙ(M; R)) (hp : p ∈ zeros f) :
+    p.baseChange A ∈ zeros (f.toBaseChange R M A n) := by
+  rw [zeros_def] at hp ⊢
+  rw [coe_baseChange]
+  -- Σ^n M -> Σ^n M/N
+  -- Σ^n (A⊗M) -> Σ^n (A⊗M/A⊗N)
+
 /-- `zeros` as a functor. -/
 def zerosFunctor (R : CommRingCat.{u}) (M : ModuleCat.{v} R) {n : ℕ} (f : Sym[R]^n M) :
     Under R ⥤ Type (max u v) where
-  obj A := zeros _
+  obj A := zeros (SymmetricPower.toBaseChange R M A n f)
   map A B := _
+  map_id := _
+  map_comp := _
+
+end zeros
+
+-- ✱
+
 
 end ProjectiveSpace
 
-end AlgebraicGeometry
+end Module

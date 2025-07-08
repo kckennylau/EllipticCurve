@@ -6,7 +6,10 @@ Authors: Kenny Lau
 
 import Mathlib.Data.Fin.Tuple.Basic
 import Mathlib.GroupTheory.Congruence.Hom
+import Mathlib.LinearAlgebra.Isomorphisms
 import Mathlib.LinearAlgebra.Multilinear.Basis
+import Mathlib.LinearAlgebra.Quotient.Basic
+import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.Logic.Equiv.Fin.Basic
 import Mathlib.Logic.Function.Basic
@@ -17,6 +20,8 @@ import Mathlib.Order.Fin.Basic
 
 These are small lemmas that can be immediatly PR'ed to Mathlib.
 -/
+
+universe u v w
 
 namespace Con
 
@@ -156,3 +161,95 @@ lemma TensorProduct.span_mk_one_eq_top {R A M : Type*} [CommSemiring R] [Semirin
     [AddCommMonoid M] [Module R M] :
     span A (Set.range (mk R A M 1)) = ⊤ := by
   rw [← Set.image_univ, ← baseChange_span, span_univ, baseChange_top]
+
+
+@[simps!] noncomputable
+def Submodule.quotientComapLinearEquiv {R : Type*} [Ring R] {M₁ M₂ : Type*}
+    [AddCommGroup M₁] [Module R M₁] [AddCommGroup M₂] [Module R M₂]
+    (f : M₁ →ₗ[R] M₂) (hf : Function.Surjective f) (N : Submodule R M₂) :
+    (M₁ ⧸ N.comap f) ≃ₗ[R] (M₂ ⧸ N) := by
+  refine .ofBijective (mapQ _ _ f le_rfl) ⟨fun x y h ↦ ?_, fun x ↦ ?_⟩
+  · obtain ⟨x, rfl⟩ := mkQ_surjective _ x
+    obtain ⟨y, rfl⟩ := mkQ_surjective _ y
+    simp_all [Submodule.Quotient.eq]
+  · obtain ⟨x, rfl⟩ := mkQ_surjective _ x
+    obtain ⟨x, rfl⟩ := hf x
+    exact ⟨mkQ _ x, by simp⟩
+
+open TensorProduct
+
+@[simp] lemma LinearEquiv.baseChange_apply {R A M N : Type*} [CommRing R] [Ring A] [Algebra R A]
+    [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N] (e : M ≃ₗ[R] N) (a : A) (m : M) :
+    e.baseChange R A M N (a ⊗ₜ m) = a ⊗ₜ (e m) :=
+  rfl
+
+noncomputable def Submodule.quotientBaseChange {R : Type u} {M : Type v} (A : Type w) [CommRing R]
+    [Ring A] [Algebra R A] [AddCommGroup M] [Module R M] (S : Submodule R M) :
+    (A ⊗[R] M ⧸ S.baseChange A) ≃ₗ[A] A ⊗[R] (M ⧸ S) :=
+  Function.Exact.linearEquivOfSurjective
+    (g := S.mkQ.baseChange A)
+    (by convert lTensor_exact A (LinearMap.exact_subtype_mkQ S) S.mkQ_surjective)
+    (S.mkQ.lTensor_surjective A S.mkQ_surjective)
+
+@[simp]
+lemma Submodule.quotientBaseChange_apply {R : Type u} {M : Type v} (A : Type w) [CommRing R]
+    [Ring A] [Algebra R A] [AddCommGroup M] [Module R M] (S : Submodule R M) (a : A) (m : M) :
+    S.quotientBaseChange A (Quotient.mk (a ⊗ₜ m)) = a ⊗ₜ (Quotient.mk m) :=
+  rfl
+
+@[simp]
+lemma Submodule.quotientBaseChange_symm_apply {R : Type u} {M : Type v} (A : Type w) [CommRing R]
+    [Ring A] [Algebra R A] [AddCommGroup M] [Module R M] (S : Submodule R M) (a : A) (m : M) :
+    (S.quotientBaseChange A).symm (a ⊗ₜ (Quotient.mk m)) = Quotient.mk (a ⊗ₜ m) :=
+  (LinearEquiv.symm_apply_eq _).2 <| Submodule.quotientBaseChange_apply ..
+
+/-- The triangle of `R`-modules `A ⊗[R] M ⟶ B ⊗[A] (A ⊗[R] M) ⟶ B ⊗[R] M` commutes. -/
+lemma AlgebraTensorModule.cancelBaseChange_comp_mk_one {R A B M : Type*}
+    [CommSemiring R] [CommSemiring A] [Semiring B] [AddCommMonoid M] [Module R M]
+    [Algebra R A] [Algebra A B] [Algebra R B] [IsScalarTower R A B] :
+    (AlgebraTensorModule.cancelBaseChange R A B B M).toLinearMap.restrictScalars R ∘ₗ
+        (TensorProduct.mk A B (A ⊗[R] M) 1).restrictScalars R =
+      LinearMap.rTensor M (IsScalarTower.toAlgHom R A B).toLinearMap :=
+  ext <| LinearMap.ext₂ fun a m ↦ by simp [Algebra.algebraMap_eq_smul_one]
+
+/-- The triangle of `R`-modules `A ⊗[R] M ⟶ B ⊗[A] (A ⊗[R] M) ⟶ B ⊗[R] M` commutes. -/
+lemma AlgebraTensorModule.cancelBaseChange_comp_mk_one' {R A B M : Type*}
+    [CommSemiring R] [CommSemiring A] [Semiring B] [AddCommMonoid M] [Module R M]
+    [Algebra R A] [Algebra A B] [Algebra R B] [IsScalarTower R A B] :
+    ((AlgebraTensorModule.cancelBaseChange R A B B M).toLinearMap.restrictScalars A ∘ₗ
+        TensorProduct.mk A B (A ⊗[R] M) 1).restrictScalars R =
+      LinearMap.rTensor M (IsScalarTower.toAlgHom R A B).toLinearMap :=
+  cancelBaseChange_comp_mk_one
+
+/-- The triangle of `R`-modules `A ⊗[R] M ⟶ B ⊗[A] (A ⊗[R] M) ⟶ B ⊗[R] M` commutes. -/
+lemma AlgebraTensorModule.coe_cancelBaseChange_comp_mk_one {R A B M : Type*}
+    [CommSemiring R] [CommSemiring A] [Semiring B] [AddCommMonoid M] [Module R M]
+    [Algebra R A] [Algebra A B] [Algebra R B] [IsScalarTower R A B] :
+    (AlgebraTensorModule.cancelBaseChange R A B B M) ∘ (TensorProduct.mk A B (A ⊗[R] M) 1) =
+      LinearMap.rTensor M (IsScalarTower.toAlgHom R A B).toLinearMap :=
+  funext <| LinearMap.congr_fun cancelBaseChange_comp_mk_one
+
+lemma LinearMap.restrictScalars_baseChange {R A M N : Type*}
+    [CommSemiring R] [Semiring A] [Algebra R A] [AddCommMonoid M] [Module R M]
+    [AddCommMonoid N] [Module R N] (f : M →ₗ[R] N) :
+    (f.baseChange A).restrictScalars R = f.lTensor A :=
+  rfl
+
+@[simp] lemma LinearMap.quotKerEquivOfSurjective_apply {R M M₂ : Type*}
+    [CommRing R] [AddCommGroup M] [Module R M] [AddCommGroup M₂] [Module R M₂]
+    (f : M →ₗ[R] M₂) (hf : Function.Surjective f) (x : M) :
+    f.quotKerEquivOfSurjective hf (Submodule.Quotient.mk x) = f x :=
+  rfl
+
+lemma LinearEquiv.piRing_symm_apply_single {R M ι S : Type*} [Semiring R] [Fintype ι]
+    [DecidableEq ι] [Semiring S] [AddCommMonoid M] [Module R M] [Module S M] [SMulCommClass R S M]
+    (f : ι → M) (i : ι) (r : R) :
+    (LinearEquiv.piRing R M ι S).symm f (Pi.single i r) = r • f i := by
+  rw [piRing_symm_apply, Finset.sum_eq_single_of_mem i (Finset.mem_univ i) (by intros; simp [*]),
+    Pi.single_apply, if_pos rfl]
+
+lemma LinearEquiv.piRing_symm_apply_single_one {R M ι S : Type*} [Semiring R] [Fintype ι]
+    [DecidableEq ι] [Semiring S] [AddCommMonoid M] [Module R M] [Module S M] [SMulCommClass R S M]
+    (f : ι → M) (i : ι) :
+    (LinearEquiv.piRing R M ι S).symm f (Pi.single i 1) = f i := by
+  rw [piRing_symm_apply_single, one_smul]
