@@ -34,7 +34,7 @@ suppress_compilation
 
 universe u v w
 
-open TensorProduct Equiv SymmMultilinearMap
+open TensorProduct Equiv SymmMultilinearMap Function
 
 variable (R : Type u) [CommSemiring R] (M : Type v) [AddCommMonoid M] [Module R M]
   (N : Type w) [AddCommMonoid N] [Module R N] (n : ℕ)
@@ -141,7 +141,7 @@ variable {R M N n} in
 variable {R M N n} in
 def liftAux (f : SymmMultilinearMap R M N (Fin n)) : Sym[R]^n M →ₗ[R] N where
   __ := AddCon.lift _ (AddMonoidHomClass.toAddMonoidHom <| PiTensorProduct.lift f) <|
-    AddCon.addConGen_le fun _ _ h ↦ h.rec fun e x ↦ by simp [apply_perm e]
+    AddCon.addConGen_le fun _ _ h ↦ h.rec fun e x ↦ by simp
   map_smul' c x := AddCon.induction_on x <| by convert (PiTensorProduct.lift f.1).map_smul c
 
 variable {R M N n} in
@@ -166,8 +166,22 @@ variable {R M N n} in
 @[simp] lemma lift_symm_coe (f : Sym[R]^n M →ₗ[R] N) :
     ⇑((lift R M N n).symm f) = ⇑f ∘ ⇑(tprod R) := rfl
 
-def map : (M →ₗ[R] N) →ₗ[R] (Sym[R]^n M →ₗ[R] Sym[R]^n N) where
-  toFun f := lift _ _ _ _ <| (tprod R).compLinearMap f
-  map_add' f g := by rw [map_add]
+variable {R M N} in
+def map (f : M →ₗ[R] N) : Sym[R]^n M →ₗ[R] Sym[R]^n N :=
+  lift _ _ _ _ <| (tprod R).compLinearMap f
+
+def mul (i j : ℕ) : Sym[R]^i M →ₗ[R] Sym[R]^j M →ₗ[R] Sym[R]^(i + j) M :=
+  lift _ _ _ _ <|
+  { val :=
+    { toFun f := lift _ _ _ _ <|
+      { val :=
+        { toFun g := tprod R <| Fin.append f g
+          map_update_add' g c x y := by simp
+          map_update_smul' g c r x := by simp }
+        property e := MultilinearMap.ext fun g ↦ by
+          rw [MultilinearMap.domDomCongr_apply, MultilinearMap.coe_mk]
+          convert (tprod_perm_apply (Fin.permAdd 1 e) _) using 2
+          simp } }
+    property := _ }
 
 end SymmetricPower
