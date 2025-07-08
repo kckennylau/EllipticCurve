@@ -213,4 +213,12 @@ noncomputable def baseChange [Finite ι] :
   map_add' f g := baseChange_hom_ext fun v ↦ by simp [tmul_add]
   map_smul' c f := baseChange_hom_ext fun v ↦ by simp
 
+@[simp] lemma baseChange_apply_tmul [Fintype ι] (f : M [Σ^ι]→ₗ[R] N) (c : ι → A) (v : ι → M) :
+    baseChange R M N ι A f (fun i ↦ c i ⊗ₜ v i) = (∏ i, c i) ⊗ₜ f v :=
+  MultilinearMap.baseChange_apply_tmul f.1 c v
+
+@[simp] lemma baseChange_apply_one_tmul [Finite ι] (f : M [Σ^ι]→ₗ[R] N) (v : ι → M) :
+    baseChange R M N ι A f (fun i ↦ 1 ⊗ₜ v i) = 1 ⊗ₜ f v :=
+  MultilinearMap.baseChange_apply_one_tmul f.1 v
+
 end SymmetricMap

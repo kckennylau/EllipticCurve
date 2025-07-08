@@ -5,7 +5,7 @@ Authors: Kenny Lau
 -/
 
 import EllipticCurve.Lemmas
-import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricMap
+import EllipticCurve.ProjectiveSpace.TensorProduct.BaseChange
 import Mathlib.LinearAlgebra.TensorPower.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
 
@@ -247,9 +247,26 @@ scoped infix:70 "✱" => SymmetricPower.mul _ _
 def toBaseChange : (Sym[R]^n M) →ₗ[R] (Sym[A]^n (A ⊗[R] M)) :=
   lift _ _ _ _ <| ((tprod A).restrictScalars R).compLinearMap (TensorProduct.mk R A M 1)
 
-def baseChange : (A ⊗[R] Sym[R]^n M) ≃ₗ[A] Sym[A]^n (A ⊗[R] M) where
-  __ := LinearMap.liftBaseChangeEquiv A <| toBaseChange R M A n
-  invFun := lift A _ _ _ <| _
+variable {M n} in
+@[simp] lemma toBaseChange_tprod (x : Fin n → M) :
+    toBaseChange R M A n (tprod R x) = ⨂ₛ[A] i, (1 ⊗ₜ x i) := by
+  simp [toBaseChange, restrictScalars]
+
+def baseChange : (A ⊗[R] Sym[R]^n M) ≃ₗ[A] Sym[A]^n (A ⊗[R] M) :=
+  .ofLinear (LinearMap.liftBaseChangeEquiv A <| toBaseChange R M A n)
+    (lift A _ _ _ <| SymmetricMap.baseChange _ _ _ _ _ (tprod R))
+    ((lift _ _ _ _).symm.injective <| baseChange_hom_ext fun v ↦ by simp)
+    ((LinearMap.liftBaseChangeEquiv A).symm.injective <| hom_ext fun v ↦ by simp)
+
+variable {M A n} in
+@[simp] lemma baseChange_tmul_tprod (r : A) (x : Fin n → M) :
+    baseChange R M A n (r ⊗ₜ[R] tprod R x) = r • ⨂ₛ[A] i, (1 ⊗ₜ x i) := by
+  simp [baseChange, toBaseChange_tprod]
+
+variable {M n} in
+lemma baseChange_one_tmul_tprod (x : Fin n → M) :
+    baseChange R M A n (1 ⊗ₜ[R] tprod R x) = ⨂ₛ[A] i, (1 ⊗ₜ x i) := by
+  simp
 
 end SymmetricPower
 
