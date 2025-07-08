@@ -99,6 +99,10 @@ attribute [coe] SymmetricMap.toMultilinearMap
 instance : Coe (M [Σ^ι]→ₗ[R] N) (MultilinearMap R (fun _ : ι ↦ M) N) :=
   ⟨fun f ↦ f.toMultilinearMap⟩
 
+lemma toMultilinearMap_injective :
+    Function.Injective (toMultilinearMap : M [Σ^ι]→ₗ[R] N → MultilinearMap R (fun _ : ι ↦ M) N) :=
+  fun _ _ h ↦ ext <| congr_fun h
+
 @[simp, norm_cast] lemma coe_coe : ⇑(f : MultilinearMap R (fun _ : ι ↦ M) N) = f := rfl
 
 @[simp] lemma coe_mk (f : MultilinearMap R (fun _ : ι ↦ M) N) (h) :
@@ -109,6 +113,10 @@ instance : Coe (M [Σ^ι]→ₗ[R] N) (MultilinearMap R (fun _ : ι ↦ M) N) :=
 
 @[simp] lemma comp_domDomCongr (e : Perm ι) : f.1.domDomCongr e = f :=
   MultilinearMap.ext (f.2 · e)
+
+@[simp] def mk' (f : MultilinearMap R (fun _ : ι ↦ M) N) (h : ∀ e, f.domDomCongr e = f) :
+    M [Σ^ι]→ₗ[R] N :=
+  ⟨f, fun v e ↦ DFunLike.congr_fun (h e) v⟩
 
 instance : Add (M [Σ^ι]→ₗ[R] N) :=
   ⟨fun f g ↦ ⟨f.1 + g.1, fun v e ↦ by simp⟩⟩
@@ -181,7 +189,7 @@ instance [NoZeroSMulDivisors S N] :
     NoZeroSMulDivisors S (M [Σ^ι]→ₗ[R] N) :=
   coe_injective.noZeroSMulDivisors _ rfl coeFn_smul
 
-/-- Embedding of alternating maps into multilinear maps as a linear map. -/
+/-- Embedding of symmetric maps into multilinear maps as a linear map. -/
 @[simps]
 def toMultilinearMapLM : (M [Σ^ι]→ₗ[R] N) →ₗ[S] MultilinearMap R (fun _ : ι ↦ M) N where
   toFun := toMultilinearMap

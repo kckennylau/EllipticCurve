@@ -6,6 +6,8 @@ Authors: Kenny Lau
 
 import Mathlib.Data.Fin.Tuple.Basic
 import Mathlib.GroupTheory.Congruence.Hom
+import Mathlib.LinearAlgebra.Multilinear.Basis
+import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.Logic.Equiv.Fin.Basic
 import Mathlib.Logic.Function.Basic
 import Mathlib.Order.Fin.Basic
@@ -61,22 +63,30 @@ lemma lastCases_update_left {n : ℕ} {M : Fin (n + 1) → Type*}
     lastCases p v j = update (lastCases q v) (Fin.last n) p j :=
   j.lastCases (by simp) fun j ↦ by simp
 
+@[simp] lemma update_last {n : ℕ} [DecidableEq (Fin (n + 1))]
+    {M : Fin (n + 1) → Type*} (v : (i : _) → M i) (i : Fin n) (x : M i.castSucc) :
+    update v i.castSucc x (last n) = v (last n) := by
+  simp [update, Fin.ext_iff, show n ≠ ↑i from ne_of_gt i.2]
+
+@[simp] lemma update_castSucc {n : ℕ} [DecidableEq (Fin (n + 1))]
+    {M : Fin (n + 1) → Type*} (v : (i : _) → M i) (i : Fin n) (x : M i.castSucc) (j : Fin n) :
+    update v i.castSucc x j.castSucc = update (fun c : Fin n ↦ v c.castSucc) i x j := by
+  simp only [update, castSucc_inj]
+  split_ifs with h
+  · subst h; rfl
+  · rfl
+
 @[simp] lemma lastCases_update_right {n : ℕ} [DecidableEq (Fin n)] {M : Fin (n + 1) → Type*}
     (p : M (Fin.last n)) (v : (i : Fin n) → M i.castSucc) (i : Fin n) (x : M i.castSucc)
     (j : Fin (n + 1)) :
     lastCases p (update v i x) j = update (lastCases p v) i.castSucc x j := by
   refine j.lastCases ?_ fun j ↦ ?_
-  · simp [update, Fin.ext_iff, show n ≠ ↑i from ne_of_gt i.2]
-  · simp only [lastCases_castSucc, update, castSucc_inj]
-    split_ifs with h
-    · subst h; rfl
-    · rfl
+  · simp
+  · simpa using by congr
 
-lemma lastCases_update_right_symm {n : ℕ} [DecidableEq (Fin (n + 1))]
-    {M : Fin (n + 1) → Type*} (p : M (Fin.last n)) (v : (i : Fin n) → M i.castSucc) (i : Fin n)
-    (x : M i.castSucc) (j : Fin (n + 1)) :
-    update (lastCases p v) i.castSucc x j = lastCases p (update v i x) j := by
-  convert (lastCases_update_right p v i x j).symm
+@[simp] lemma lastCases_last_castSucc {n : ℕ} {M : Fin (n + 1) → Type*} (v : (i : _) → M i) :
+    lastCases (v (Fin.last n)) (fun i ↦ v i.castSucc) = v :=
+  funext <| lastCases (by simp) (by simp)
 
 variable (e₁ : Perm (Fin i)) (e₂ : Perm (Fin j))
 
@@ -90,3 +100,59 @@ def permAdd : Perm (Fin (i + j)) :=
   simp [permAdd]
 
 end Fin
+
+open Submodule
+
+lemma Finsupp.image_lift (R : Type*) [Semiring R] {M : Type*} [AddCommMonoid M] [Module R M]
+    {X : Type*} (f : X → M) : LinearMap.range (lift M R X f) = .span R (Set.range f) := by
+  refine le_antisymm (LinearMap.range_le_iff_comap.2 <| eq_top_iff'.2 fun c ↦ ?_)
+    (span_le.2 <| Set.range_subset_iff.2 fun x ↦ ⟨single x 1, by simp⟩)
+  simpa using sum_mem fun c hc ↦ smul_mem _ _ (subset_span <| Set.mem_range_self c)
+
+lemma Finsupp.lift_surjective_iff (R : Type*) [Semiring R]
+    {M : Type*} [AddCommMonoid M] [Module R M] {X : Type*} (f : X → M) :
+    Function.Surjective (lift M R X f) ↔ span R (Set.range f) = ⊤ := by
+  rw [← LinearMap.range_eq_top, image_lift]
+
+/-- `s` spans a module `M` iff the corresponding map from `s →₀ R` is surjective. -/
+lemma Finsupp.lift_surjective_iff' (R : Type*) [Semiring R]
+    {M : Type*} [AddCommMonoid M] [Module R M] (s : Set M) :
+    Function.Surjective (lift M R s Subtype.val) ↔ span R s = ⊤ := by
+  rw [lift_surjective_iff, Subtype.range_coe_subtype, Set.setOf_mem_eq]
+
+-- Generalises `Basis.ext_multilinear`.
+lemma MultilinearMap.hom_ext {R ι N : Type*} [CommSemiring R] [Finite ι] {M : ι → Type*}
+    [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)] [AddCommMonoid N] [Module R N]
+    {f g : MultilinearMap R M N} (s : ∀ i, Set (M i))
+    (span : ∀ i, span R (s i) = ⊤)
+    (h : ∀ v : (i : ι) → s i, (f fun i ↦ v i) = g fun i ↦ v i) : f = g := by
+  cases nonempty_fintype ι
+  ext v
+  obtain ⟨a, rfl⟩ := Function.Surjective.piMap
+    (fun i ↦ (Finsupp.lift_surjective_iff' R _).2 (span i)) v
+  unfold Pi.map
+  classical simp [Finsupp.sum, map_sum_finset, map_smul_univ, h]
+
+lemma MultilinearMap.hom_ext' {R ι N : Type*} [CommSemiring R] [Finite ι] {M : ι → Type*}
+    [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)] [AddCommMonoid N] [Module R N]
+    {f g : MultilinearMap R M N} (X : ι → Type*) (s : (i : ι) → X i → M i)
+    (span : ∀ i, span R (Set.range (s i)) = ⊤)
+    (h : ∀ v : (i : ι) → X i, (f fun i ↦ s i (v i)) = g fun i ↦ s i (v i)) : f = g :=
+  hom_ext _ span fun v ↦ by
+    convert h fun i ↦ (v i).2.choose using 2 <;>
+    exact funext fun i ↦ (v i).2.choose_spec.symm
+
+lemma MultilinearMap.hom_ext₂ {R ι N : Type*} [CommSemiring R] [Finite ι] {M : ι → Type*}
+    [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)] [AddCommMonoid N] [Module R N]
+    {f g : MultilinearMap R M N} (X : ι → Type*) (Y : ι → Type*) (s : (i : ι) → X i → Y i → M i)
+    (span : ∀ i, span R ({ t | ∃ m n, s i m n = t }) = ⊤)
+    (h : ∀ (v : (i : ι) → X i) (w : (i : ι) → Y i),
+      (f fun i ↦ s i (v i) (w i)) = g fun i ↦ s i (v i) (w i)) : f = g :=
+  hom_ext' (fun i ↦ X i × Y i) (fun i ↦ Function.uncurry (s i))
+    (fun i ↦ by convert span i; simp [Function.uncurry, Set.range]) fun v ↦ h _ _
+
+@[simp]
+lemma TensorProduct.span_mk_one_eq_top {R A M : Type*} [CommSemiring R] [Semiring A] [Algebra R A]
+    [AddCommMonoid M] [Module R M] :
+    span A (Set.range (mk R A M 1)) = ⊤ := by
+  rw [← Set.image_univ, ← baseChange_span, span_univ, baseChange_top]
