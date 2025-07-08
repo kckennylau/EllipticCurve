@@ -56,7 +56,15 @@ variable {M : Type*} {i j : ℕ} (f : Fin i → M) (g : Fin j → M)
   · rw [append_right, update_apply, update_apply, append_right]
     exact ite_congr (by rw [natAdd_inj]) (fun _ ↦ rfl) fun _ ↦ rfl
 
-def permAdd (e₁ : Perm (Fin i)) (e₂ : Perm (Fin j)) : Perm (Fin (i + j)) :=
+variable (e₁ : Perm (Fin i)) (e₂ : Perm (Fin j))
+
+def permAdd : Perm (Fin (i + j)) :=
   finSumFinEquiv.permCongr (e₁.sumCongr e₂)
+
+@[simp] lemma permAdd_left (x : Fin i) : permAdd e₁ e₂ (x.castAdd j) = (e₁ x).castAdd j := by
+  simp [permAdd]
+
+@[simp] lemma permAdd_right (x : Fin j) : permAdd e₁ e₂ (x.natAdd i) = (e₂ x).natAdd i := by
+  simp [permAdd]
 
 end Fin

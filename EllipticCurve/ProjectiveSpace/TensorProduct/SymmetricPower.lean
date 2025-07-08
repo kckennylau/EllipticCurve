@@ -5,7 +5,7 @@ Authors: Kenny Lau
 -/
 
 import EllipticCurve.Lemmas
-import EllipticCurve.ProjectiveSpace.TensorProduct.SymmMultilinearMap
+import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricMap
 import Mathlib.LinearAlgebra.TensorPower.Basic
 
 /-!
@@ -34,7 +34,7 @@ suppress_compilation
 
 universe u v w
 
-open TensorProduct Equiv SymmMultilinearMap Function
+open TensorProduct Equiv SymmetricMap Function
 
 variable (R : Type u) [CommSemiring R] (M : Type v) [AddCommMonoid M] [Module R M]
   (N : Type w) [AddCommMonoid N] [Module R N] (n : ℕ)
@@ -94,9 +94,9 @@ def mk : ⨂[R]^n M →ₗ[R] Sym[R]^n M where
 variable {M n} in
 /-- The multilinear map that takes `n` elements of `M` and returns their symmetric tensor product.
 Denoted `⨂ₛ[R] i, f i`. -/
-def tprod : SymmMultilinearMap R M (Sym[R]^n M) (Fin n) :=
-  ⟨(mk R M n).compMultilinearMap (PiTensorProduct.tprod R), fun e ↦
-    MultilinearMap.ext fun x ↦ Eq.symm <| Quot.sound <| AddConGen.Rel.of _ _ <| Rel.perm e x⟩
+def tprod : SymmetricMap R M (Sym[R]^n M) (Fin n) :=
+  ⟨(mk R M n).compMultilinearMap (PiTensorProduct.tprod R), fun x e ↦
+    Eq.symm <| Quot.sound <| AddConGen.Rel.of _ _ <| Rel.perm e x⟩
 
 unsuppress_compilation in
 @[inherit_doc tprod]
@@ -105,7 +105,7 @@ notation3:100 "⨂ₛ["R"] "(...)", "r:(scoped f => tprod R f) => r
 variable {R M n} in
 @[simp] lemma tprod_perm_apply (e : Perm (Fin n)) (f : Fin n → M) :
     (⨂ₛ[R] i, f (e i)) = tprod R f :=
-  DFunLike.ext_iff.1 ((tprod R).2 e) f
+  (tprod R).2 f e
 
 theorem range_mk : LinearMap.range (mk R M n) = ⊤ :=
   LinearMap.range_eq_top_of_surjective _ AddCon.mk'_surjective
@@ -139,26 +139,26 @@ variable {R M N n} in
   LinearMap.toAddMonoidHom_injective <| addHom_ext fun r x ↦ by simp [map_smul, h]
 
 variable {R M N n} in
-def liftAux (f : SymmMultilinearMap R M N (Fin n)) : Sym[R]^n M →ₗ[R] N where
+def liftAux (f : SymmetricMap R M N (Fin n)) : Sym[R]^n M →ₗ[R] N where
   __ := AddCon.lift _ (AddMonoidHomClass.toAddMonoidHom <| PiTensorProduct.lift f) <|
     AddCon.addConGen_le fun _ _ h ↦ h.rec fun e x ↦ by simp
   map_smul' c x := AddCon.induction_on x <| by convert (PiTensorProduct.lift f.1).map_smul c
 
 variable {R M N n} in
-@[simp] lemma liftAux_tprod (f : SymmMultilinearMap R M N (Fin n)) (x : Fin n → M) :
+@[simp] lemma liftAux_tprod (f : SymmetricMap R M N (Fin n)) (x : Fin n → M) :
     liftAux f (tprod R x) = f x := by
   change liftAux f (AddCon.mk' _ _) = _; simp [liftAux]
 
-def lift : SymmMultilinearMap R M N (Fin n) ≃ₗ[R] (Sym[R]^n M →ₗ[R] N) where
+def lift : SymmetricMap R M N (Fin n) ≃ₗ[R] (Sym[R]^n M →ₗ[R] N) where
   toFun f := liftAux f
-  invFun f := f.compSymmMultilinearMap (tprod R)
+  invFun f := f.compSymmetricMap (tprod R)
   left_inv f := by ext; simp
   right_inv f := by ext; simp
   map_add' f g := hom_ext fun x ↦ by simp
   map_smul' c f := hom_ext fun x ↦ by simp
 
 variable {R M N n} in
-@[simp] lemma lift_tprod (f : SymmMultilinearMap R M N (Fin n)) (x : Fin n → M) :
+@[simp] lemma lift_tprod (f : SymmetricMap R M N (Fin n)) (x : Fin n → M) :
     lift R M N n f (tprod R x) = f x :=
   liftAux_tprod f x
 
@@ -172,16 +172,18 @@ def map (f : M →ₗ[R] N) : Sym[R]^n M →ₗ[R] Sym[R]^n N :=
 
 def mul (i j : ℕ) : Sym[R]^i M →ₗ[R] Sym[R]^j M →ₗ[R] Sym[R]^(i + j) M :=
   lift _ _ _ _ <|
-  { val :=
-    { toFun f := lift _ _ _ _ <|
-      { val :=
-        { toFun g := tprod R <| Fin.append f g
-          map_update_add' g c x y := by simp
-          map_update_smul' g c r x := by simp }
-        property e := MultilinearMap.ext fun g ↦ by
-          rw [MultilinearMap.domDomCongr_apply, MultilinearMap.coe_mk]
-          convert (tprod_perm_apply (Fin.permAdd 1 e) _) using 2
-          simp } }
-    property := _ }
+  { toFun f := lift _ _ _ _ <|
+    { toFun g := tprod R <| Fin.append f g
+      map_update_add' g c x y := by simp
+      map_update_smul' g c r x := by simp
+      map_perm_apply' g e := by
+        convert (tprod_perm_apply (Fin.permAdd 1 e) _) using 2
+        ext x; exact x.addCases (by simp) (by simp) }
+    map_update_add' f c x y := hom_ext fun g ↦ by simp
+    map_update_smul' f c r x := hom_ext fun g ↦ by simp
+    map_perm_apply' f e := hom_ext fun g ↦ by
+      simp only [lift_tprod, coe_mk, MultilinearMap.coe_mk]
+      convert (tprod_perm_apply (Fin.permAdd e 1) _) using 2
+      ext x; exact x.addCases (by simp) (by simp) }
 
 end SymmetricPower
