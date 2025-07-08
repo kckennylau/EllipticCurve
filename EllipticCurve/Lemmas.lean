@@ -56,6 +56,28 @@ variable {M : Type*} {i j : ℕ} (f : Fin i → M) (g : Fin j → M)
   · rw [append_right, update_apply, update_apply, append_right]
     exact ite_congr (by rw [natAdd_inj]) (fun _ ↦ rfl) fun _ ↦ rfl
 
+lemma lastCases_update_left {n : ℕ} {M : Fin (n + 1) → Type*}
+    (p q : M (Fin.last n)) (v : (i : Fin n) → M i.castSucc) (j : Fin (n + 1)) :
+    lastCases p v j = update (lastCases q v) (Fin.last n) p j :=
+  j.lastCases (by simp) fun j ↦ by simp
+
+@[simp] lemma lastCases_update_right {n : ℕ} [DecidableEq (Fin n)] {M : Fin (n + 1) → Type*}
+    (p : M (Fin.last n)) (v : (i : Fin n) → M i.castSucc) (i : Fin n) (x : M i.castSucc)
+    (j : Fin (n + 1)) :
+    lastCases p (update v i x) j = update (lastCases p v) i.castSucc x j := by
+  refine j.lastCases ?_ fun j ↦ ?_
+  · simp [update, Fin.ext_iff, show n ≠ ↑i from ne_of_gt i.2]
+  · simp only [lastCases_castSucc, update, castSucc_inj]
+    split_ifs with h
+    · subst h; rfl
+    · rfl
+
+lemma lastCases_update_right_symm {n : ℕ} [DecidableEq (Fin (n + 1))]
+    {M : Fin (n + 1) → Type*} (p : M (Fin.last n)) (v : (i : Fin n) → M i.castSucc) (i : Fin n)
+    (x : M i.castSucc) (j : Fin (n + 1)) :
+    update (lastCases p v) i.castSucc x j = lastCases p (update v i x) j := by
+  convert (lastCases_update_right p v i x j).symm
+
 variable (e₁ : Perm (Fin i)) (e₂ : Perm (Fin j))
 
 def permAdd : Perm (Fin (i + j)) :=

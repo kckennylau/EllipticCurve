@@ -304,4 +304,10 @@ variable {ι} in
 @[simps!] def isUnique [Unique ι] : (M [Σ^ι]→ₗ[R] N) ≃+ (M →ₗ[R] N) :=
   ofSubsingleton R M N default
 
+variable {R M N ι} in
+def restrictScalars (S : Type*) [Semiring S] [SMul S R] [Module S M] [Module S N]
+    [IsScalarTower S R M] [IsScalarTower S R N]
+    (f : M [Σ^ι]→ₗ[R] N) : M [Σ^ι]→ₗ[S] N :=
+  ⟨f.1.restrictScalars S, fun v e ↦ f.2 v e⟩
+
 end SymmetricMap

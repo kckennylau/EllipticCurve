@@ -7,6 +7,7 @@ Authors: Kenny Lau
 import EllipticCurve.Lemmas
 import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricMap
 import Mathlib.LinearAlgebra.TensorPower.Basic
+import Mathlib.RingTheory.TensorProduct.Basic
 
 /-!
 # Symmetric tensor power of a semimodule over a commutative semiring
@@ -32,12 +33,15 @@ from `M ^ n` to `Sym[R]^n M` by `⨂ₛ[R] i, f i`.
 
 suppress_compilation
 
-universe u v w
+universe u u' v w
 
 open TensorProduct Equiv SymmetricMap Function
 
-variable (R : Type u) [CommSemiring R] (M : Type v) [AddCommMonoid M] [Module R M]
-  (N : Type w) [AddCommMonoid N] [Module R N] (n : ℕ)
+section CommSemiring
+
+variable (S : Type*) [CommSemiring S] (R : Type u) [CommSemiring R] [Algebra S R]
+  [SMulCommClass S R R] (M : Type v) [AddCommMonoid M] [Module R M]
+  (N : Type w) [AddCommMonoid N] [Module R N] (A : Type u') [CommSemiring A] [Algebra R A] (n : ℕ)
 
 /-- The relation on the `n`ᵗʰ tensor power of `M` that two tensors are equal if they are related by
 a permutation of `Fin n`. -/
@@ -56,35 +60,60 @@ namespace SymmetricPower
 
 instance : AddCommMonoid (Sym[R]^n M) := AddCon.addCommMonoid _
 
-instance (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M] (n : ℕ) :
-    AddCommGroup (Sym[R]^n M) := AddCon.addCommGroup _
-
 variable {R M n} in
-lemma smul (r : R) (x y : ⨂[R]^n M) (h : addConGen (Rel R M n) x y) :
+lemma smulAux' (r : R) (x y : ⨂[R]^n M) (h : Rel R M n x y) :
     addConGen (Rel R M n) (r • x) (r • y) := by
   induction h with
-  | of x y h => cases h with
-    | perm e f => cases n with
-      | zero => convert (addConGen (Rel R M 0)).refl _
-      | succ n =>
-          convert AddConGen.Rel.of _ _ (Rel.perm (R := R) e (Function.update f 0 (r • f 0)))
-          · rw [MultilinearMap.map_update_smul, Function.update_eq_self]
-          · simp_rw [Function.update_apply_equiv_apply, MultilinearMap.map_update_smul,
-              ← Function.update_comp_equiv, Function.update_eq_self]; rfl
-  | refl => exact AddCon.refl _ _
-  | symm => apply AddCon.symm; assumption
-  | trans => apply AddCon.trans <;> assumption
-  | add => rw [smul_add, smul_add]; apply AddCon.add <;> assumption
+  | perm e f => cases n with
+    | zero => convert (addConGen (Rel R M 0)).refl _
+    | succ n =>
+      convert AddConGen.Rel.of _ _ (Rel.perm (R := R) e (Function.update f 0 (r • f 0)))
+      · rw [MultilinearMap.map_update_smul, Function.update_eq_self]
+      · simp_rw [Function.update_apply_equiv_apply, MultilinearMap.map_update_smul,
+          ← Function.update_comp_equiv, Function.update_eq_self]; rfl
 
-instance module : Module R (Sym[R]^n M) where
-  smul r := AddCon.lift _ ((AddCon.mk' _).comp (AddMonoidHom.smulLeft r)) fun x y h ↦
-    Quotient.sound (smul r x y h)
-  one_smul x := AddCon.induction_on x <| fun x ↦ congr_arg _ <| one_smul R x
-  mul_smul r s x := AddCon.induction_on x <| fun x ↦ congr_arg _ <| mul_smul r s x
-  zero_smul x := AddCon.induction_on x <| fun x ↦ congr_arg _ <| zero_smul R x
-  add_smul r s x := AddCon.induction_on x <| fun x ↦ congr_arg _ <| add_smul r s x
+variable {R M n} in
+lemma smulAux (r : S) (x y : ⨂[R]^n M) (h : Rel R M n x y) :
+    addConGen (Rel R M n) (r • x) (r • y) := by
+  convert smulAux' (algebraMap S R r) x y h using 1 <;> rw [algebraMap_smul]
+
+instance smul : SMul S (Sym[R]^n M) where
+  smul r := AddCon.lift _ ((AddCon.mk' _).comp (AddMonoidHom.smulLeft r)) <|
+    AddCon.addConGen_le fun x y h ↦ Quotient.sound <| by convert smulAux S r x y h
+
+/-- The canonical map from the `n`ᵗʰ tensor power to the `n`ᵗʰ symmetric tensor power. -/
+def mk' : ⨂[R]^n M →+ Sym[R]^n M where
+  __ := AddCon.mk' _
+
+variable {S R M n} in
+lemma smul_def (r : S) (x : ⨂[R]^n M) : r • mk' R M n x = mk' R M n (r • x) :=
+  rfl
+
+variable {R M n} in
+@[elab_as_elim] lemma mk_induction {C : Sym[R]^n M → Prop} (ih : ∀ x, C (mk' R M n x))
+    (x : Sym[R]^n M) : C x :=
+  AddCon.induction_on x ih
+
+variable {R M n} in
+@[elab_as_elim] lemma mk_inductionOn {C : Sym[R]^n M → Prop} (x : Sym[R]^n M)
+    (ih : ∀ x, C (mk' R M n x)) : C x :=
+  AddCon.induction_on x ih
+
+instance module : Module S (Sym[R]^n M) where
+  one_smul := mk_induction fun x ↦ congr_arg (mk' R M n) <| one_smul S x
+  mul_smul r s := mk_induction fun x ↦ congr_arg (mk' R M n) <| mul_smul r s x
+  zero_smul := mk_induction fun x ↦ congr_arg (mk' R M n) <| zero_smul _ x
+  add_smul r s := mk_induction fun x ↦ congr_arg (mk' R M n) <| add_smul r s x
   smul_zero _ := map_zero _
   smul_add _ := map_add _
+
+-- shortcut instance
+instance : Module R (Sym[R]^n M) :=
+  module R R M n
+
+variable [Module S M] [IsScalarTower S R M]
+instance : IsScalarTower S R (Sym[R]^n M) where
+  smul_assoc r s := mk_induction fun x ↦ congr_arg (mk' R M n) <| smul_assoc r s x
 
 /-- The canonical map from the `n`ᵗʰ tensor power to the `n`ᵗʰ symmetric tensor power. -/
 def mk : ⨂[R]^n M →ₗ[R] Sym[R]^n M where
@@ -215,4 +244,22 @@ def one_equiv : Sym[R]^1 M ≃ₗ[R] M where
 
 scoped infix:70 "✱" => SymmetricPower.mul _ _
 
+def toBaseChange : (Sym[R]^n M) →ₗ[R] (Sym[A]^n (A ⊗[R] M)) :=
+  lift _ _ _ _ <| ((tprod A).restrictScalars R).compLinearMap (TensorProduct.mk R A M 1)
+
+def baseChange : (A ⊗[R] Sym[R]^n M) ≃ₗ[A] Sym[A]^n (A ⊗[R] M) where
+  __ := LinearMap.liftBaseChangeEquiv A <| toBaseChange R M A n
+  invFun := lift A _ _ _ <| _
+
 end SymmetricPower
+
+end CommSemiring
+
+section CommRing
+
+variable (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M]
+  (N : Type w) [AddCommGroup N] [Module R N] (n : ℕ)
+
+instance : AddCommGroup (Sym[R]^n M) := AddCon.addCommGroup _
+
+end CommRing

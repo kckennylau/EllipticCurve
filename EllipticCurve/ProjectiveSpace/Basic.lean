@@ -5,6 +5,7 @@ Authors: Kenny Lau
 -/
 
 import EllipticCurve.Grassmannians.Basic
+import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricPower
 
 /-!
 # Projective Space of a Module over a Ring
@@ -98,6 +99,16 @@ lemma chartFunctor_obj (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (x : M) (A : 
 noncomputable abbrev chartToFunctor (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (x : M) :
     chartFunctor R M x ⟶ functor R M :=
   Grassmannian.chartToFunctor R M 1 (fun _ ↦ x)
+
+/-- `V(f)` the set of zeroes of the homogeneous polynomial `f` of degree `n`. -/
+def zeros {n : ℕ} (f : Sym[R]^n M) : Set ℙ(M; R) :=
+  { N | f.map n (Submodule.mkQ N.1) = 0 }
+
+/-- `zeros` as a functor. -/
+def zerosFunctor (R : CommRingCat.{u}) (M : ModuleCat.{v} R) {n : ℕ} (f : Sym[R]^n M) :
+    Under R ⥤ Type (max u v) where
+  obj A := zeros _
+  map A B := _
 
 end ProjectiveSpace
 
