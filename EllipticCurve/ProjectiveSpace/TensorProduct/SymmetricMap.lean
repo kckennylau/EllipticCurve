@@ -102,7 +102,7 @@ instance : Coe (M [Σ^ι]→ₗ[R] N) (MultilinearMap R (fun _ : ι ↦ M) N) :=
 @[simp, norm_cast] lemma coe_coe : ⇑(f : MultilinearMap R (fun _ : ι ↦ M) N) = f := rfl
 
 @[simp] lemma coe_mk (f : MultilinearMap R (fun _ : ι ↦ M) N) (h) :
-  ⇑(⟨f, h⟩ : SymmetricMap R M N ι) = f := rfl
+  ⇑(⟨f, h⟩ : M [Σ^ι]→ₗ[R] N) = f := rfl
 
 @[simp] lemma map_perm_apply (e : Perm ι) (x : ι → M) : (f fun i ↦ x (e i)) = f x :=
   f.2 x e
@@ -190,19 +190,19 @@ def toMultilinearMapLM : (M [Σ^ι]→ₗ[R] N) →ₗ[S] MultilinearMap R (fun 
 
 end Module
 
-def compLinearMap (f : SymmetricMap R N P ι) (g : M →ₗ[R] N) :
-    SymmetricMap R M P ι :=
+def compLinearMap (f : N [Σ^ι]→ₗ[R] P) (g : M →ₗ[R] N) :
+    M [Σ^ι]→ₗ[R] P :=
   ⟨f.1.compLinearMap fun _ ↦ g, fun x e ↦ f.map_perm_apply e (g ∘ x)⟩
 
-@[simp] lemma compLinearMap_coe (f : SymmetricMap R N P ι) (g : M →ₗ[R] N) :
+@[simp] lemma compLinearMap_coe (f : N [Σ^ι]→ₗ[R] P) (g : M →ₗ[R] N) :
     ⇑(f.compLinearMap g) = ⇑f ∘ fun x i ↦ g (x i) := rfl
 
-lemma compLinearMap_apply (f : SymmetricMap R N P ι) (g : M →ₗ[R] N) (x : ι → M) :
+lemma compLinearMap_apply (f : N [Σ^ι]→ₗ[R] P) (g : M →ₗ[R] N) (x : ι → M) :
     f.compLinearMap g x = f (g ∘ x) := rfl
 
 variable (P ι) in
 def compLinearMapAddHom (f : M →ₗ[R] N) :
-    SymmetricMap R N P ι →+ SymmetricMap R M P ι :=
+    (N [Σ^ι]→ₗ[R] P) →+ (M [Σ^ι]→ₗ[R] P) :=
   { toFun g := compLinearMap g f
     map_zero' := rfl
     map_add' _ _ := rfl }
@@ -210,10 +210,10 @@ def compLinearMapAddHom (f : M →ₗ[R] N) :
 @[simp] lemma compLinearMapAddHom_coe (f : M →ₗ[R] N) :
     ⇑(compLinearMapAddHom P ι f) = (compLinearMap · f) := rfl
 
-lemma compLinearMapAddHom_apply (f : M →ₗ[R] N) (g : SymmetricMap R N P ι) :
+lemma compLinearMapAddHom_apply (f : M →ₗ[R] N) (g : N [Σ^ι]→ₗ[R] P) :
     compLinearMapAddHom P ι f g = compLinearMap g f := rfl
 
-lemma compLinearMap_add (f₁ f₂ : SymmetricMap R N P ι) (g : M →ₗ[R] N) :
+lemma compLinearMap_add (f₁ f₂ : N [Σ^ι]→ₗ[R] P) (g : M →ₗ[R] N) :
     compLinearMap (f₁ + f₂) g = compLinearMap f₁ g + compLinearMap f₂ g := rfl
 
 section Module
@@ -221,14 +221,14 @@ section Module
 variable (S : Type*) [Semiring S] [Module S P] [SMulCommClass R S P]
 
 variable (P ι) in
-def compLinearMapₗ (f : M →ₗ[R] N) : SymmetricMap R N P ι →ₗ[S] SymmetricMap R M P ι :=
+def compLinearMapₗ (f : M →ₗ[R] N) : (N [Σ^ι]→ₗ[R] P) →ₗ[S] (M [Σ^ι]→ₗ[R] P) :=
   { __ := compLinearMapAddHom P ι f
     map_smul' _ _ := rfl }
 
 @[simp] lemma compLinearMapₗ_coe [Module R S] (f : M →ₗ[R] N) :
     ⇑(compLinearMapₗ P ι S f) = (compLinearMap · f) := rfl
 
-lemma compLinearMapₗ_apply [Module R S] (f : M →ₗ[R] N) (g : SymmetricMap R N P ι) :
+lemma compLinearMapₗ_apply [Module R S] (f : M →ₗ[R] N) (g : N [Σ^ι]→ₗ[R] P) :
     compLinearMapₗ P ι S f g = compLinearMap g f := rfl
 
 end Module
@@ -272,3 +272,36 @@ def compSymmetricMapₗ (f : N →ₗ[R] P) : SymmetricMap R M N ι →ₗ[S] Sy
     map_smul' c g := SymmetricMap.ext fun x ↦ map_smul_of_tower f c (g x) }
 
 end LinearMap
+
+namespace SymmetricMap
+
+@[simps] def ofIsEmpty [IsEmpty ι] : (M [Σ^ι]→ₗ[R] N) ≃+ N where
+  toFun f := f isEmptyElim
+  invFun n := { toFun _ := n
+                map_update_add' _ := isEmptyElim
+                map_update_smul' _ := isEmptyElim
+                map_perm_apply' _ _ := rfl }
+  map_add' _ _ := rfl
+  left_inv f := ext fun _ ↦ congrArg f <| Subsingleton.elim _ _
+  right_inv _ := rfl
+
+variable {ι} in
+@[simps!] def ofSubsingleton [Subsingleton ι] (i : ι) : (M [Σ^ι]→ₗ[R] N) ≃+ (M →ₗ[R] N) where
+  toFun f :=
+  { toFun m := f (const ι m)
+    map_add' m₁ m₂ := by
+      convert f.map_update_add 0 i m₁ m₂ using 2 <;>
+      simp [eq_const_of_subsingleton (update _ _ _) i]
+    map_smul' c m := by
+      convert f.map_update_smul 0 i c m using 2 <;>
+      simp [eq_const_of_subsingleton (update _ _ _) i]}
+  invFun f := ⟨MultilinearMap.ofSubsingleton R M N i f, fun v e ↦
+    by simp [Perm.subsingleton_eq_refl]⟩
+  map_add' f g := rfl
+  left_inv f := ext fun v ↦ congrArg f (eq_const_of_subsingleton v i).symm
+  right_inv f := rfl
+
+@[simps!] def isUnique [Unique ι] : (M [Σ^ι]→ₗ[R] N) ≃+ (M →ₗ[R] N) :=
+  ofSubsingleton R M N default
+
+end SymmetricMap

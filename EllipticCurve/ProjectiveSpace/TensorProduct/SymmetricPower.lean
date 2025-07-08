@@ -94,7 +94,7 @@ def mk : ⨂[R]^n M →ₗ[R] Sym[R]^n M where
 variable {M n} in
 /-- The multilinear map that takes `n` elements of `M` and returns their symmetric tensor product.
 Denoted `⨂ₛ[R] i, f i`. -/
-def tprod : SymmetricMap R M (Sym[R]^n M) (Fin n) :=
+def tprod : M [Σ^Fin n]→ₗ[R] Sym[R]^n M :=
   ⟨(mk R M n).compMultilinearMap (PiTensorProduct.tprod R), fun x e ↦
     Eq.symm <| Quot.sound <| AddConGen.Rel.of _ _ <| Rel.perm e x⟩
 
@@ -139,17 +139,17 @@ variable {R M N n} in
   LinearMap.toAddMonoidHom_injective <| addHom_ext fun r x ↦ by simp [map_smul, h]
 
 variable {R M N n} in
-def liftAux (f : SymmetricMap R M N (Fin n)) : Sym[R]^n M →ₗ[R] N where
+def liftAux (f : M [Σ^Fin n]→ₗ[R] N) : Sym[R]^n M →ₗ[R] N where
   __ := AddCon.lift _ (AddMonoidHomClass.toAddMonoidHom <| PiTensorProduct.lift f) <|
     AddCon.addConGen_le fun _ _ h ↦ h.rec fun e x ↦ by simp
   map_smul' c x := AddCon.induction_on x <| by convert (PiTensorProduct.lift f.1).map_smul c
 
 variable {R M N n} in
-@[simp] lemma liftAux_tprod (f : SymmetricMap R M N (Fin n)) (x : Fin n → M) :
+@[simp] lemma liftAux_tprod (f : M [Σ^Fin n]→ₗ[R] N) (x : Fin n → M) :
     liftAux f (tprod R x) = f x := by
   change liftAux f (AddCon.mk' _ _) = _; simp [liftAux]
 
-def lift : SymmetricMap R M N (Fin n) ≃ₗ[R] (Sym[R]^n M →ₗ[R] N) where
+def lift : M [Σ^Fin n]→ₗ[R] N ≃ₗ[R] (Sym[R]^n M →ₗ[R] N) where
   toFun f := liftAux f
   invFun f := f.compSymmetricMap (tprod R)
   left_inv f := by ext; simp
@@ -158,7 +158,7 @@ def lift : SymmetricMap R M N (Fin n) ≃ₗ[R] (Sym[R]^n M →ₗ[R] N) where
   map_smul' c f := hom_ext fun x ↦ by simp
 
 variable {R M N n} in
-@[simp] lemma lift_tprod (f : SymmetricMap R M N (Fin n)) (x : Fin n → M) :
+@[simp] lemma lift_tprod (f : M [Σ^Fin n]→ₗ[R] N) (x : Fin n → M) :
     lift R M N n f (tprod R x) = f x :=
   liftAux_tprod f x
 
@@ -185,5 +185,34 @@ def mul (i j : ℕ) : Sym[R]^i M →ₗ[R] Sym[R]^j M →ₗ[R] Sym[R]^(i + j) M
       simp only [lift_tprod, coe_mk, MultilinearMap.coe_mk]
       convert (tprod_perm_apply (Fin.permAdd e 1) _) using 2
       ext x; exact x.addCases (by simp) (by simp) }
+
+def zero_equiv : Sym[R]^0 M ≃ₗ[R] R where
+  __ := lift R M R 0 ((ofIsEmpty R M R (Fin 0)).symm 1)
+  invFun r := r • tprod R ![]
+  left_inv x := by
+    induction x using SymmetricPower.inductionOn with
+    | zero => simp
+    | smul_tprod r x => simp [Subsingleton.elim x ![]]
+    | add x y hx hy => simp_all [add_smul]
+  right_inv r := by simp
+
+def one_equiv : Sym[R]^1 M ≃ₗ[R] M where
+  __ := lift R M M 1 ((ofSubsingleton R M M 0).symm 1)
+  invFun m := tprod R ![m]
+  left_inv x := by
+    induction x using SymmetricPower.inductionOn with
+    | zero => simp [(tprod R).map_coord_zero (g := ![(0 : M)]) 0]
+    | smul_tprod r x =>
+        convert (tprod R).map_update_smul x 0 r (x 0) <;>
+        exact funext <| Fin.forall_fin_one.2 <| by simp
+    | add x y hx hy =>
+        have (m₁ m₂ : M) : tprod R ![m₁ + m₂] = tprod R ![m₁] + tprod R ![m₂] := by
+          convert (tprod R).map_update_add ![0] 0 m₁ m₂ using 3 <;>
+          exact funext <| Fin.forall_fin_one.2 <| by simp
+        conv => enter [2]; rw [← hx, ← hy]
+        simp [this]
+  right_inv m := by simp
+
+scoped infix:70 "✱" => SymmetricPower.mul _ _
 
 end SymmetricPower
