@@ -25,7 +25,7 @@ section Semiring
 
 variable (R : Type u) [Semiring R] (M : Type v) [AddCommMonoid M] [Module R M]
   (N : Type w) [AddCommMonoid N] [Module R N]
-  (P : Type w') [AddCommMonoid P] [Module R P] (ι : Type u')
+  (P : Type w') [AddCommMonoid P] [Module R P] (ι : Type u') (ι' : Type u₁) (ι'' : Type u₂)
 
 /-- An symmetric map from `ι → M` to `N`, denoted `M [Σ^ι]→ₗ[R] N`,
 is a multilinear map that stays the same when its arguments are permuted. -/
@@ -314,11 +314,46 @@ variable {ι} in
 @[simps!] def isUnique [Unique ι] : (M [Σ^ι]→ₗ[R] N) ≃+ (M →ₗ[R] N) :=
   ofSubsingleton R M N default
 
-variable {R M N ι} in
+variable {R M N ι ι' ι''}
+
 def restrictScalars (S : Type*) [Semiring S] [SMul S R] [Module S M] [Module S N]
     [IsScalarTower S R M] [IsScalarTower S R N]
     (f : M [Σ^ι]→ₗ[R] N) : M [Σ^ι]→ₗ[S] N :=
   ⟨f.1.restrictScalars S, fun v e ↦ f.2 v e⟩
+
+def domDomCongr (e : ι ≃ ι') (f : M [Σ^ι]→ₗ[R] N) : M [Σ^ι']→ₗ[R] N :=
+  ⟨f.1.domDomCongr e, fun v e₁ ↦ calc
+    (f fun i ↦ v (e₁ (e i)))
+      = (f fun i ↦ v (e (e.permCongr.symm e₁ i))) := by simp
+    _ = (f fun i ↦ v (e i)) := f.2 (v ∘ e) (e.permCongr.symm e₁)⟩
+
+@[simp] lemma domDomCongr_apply (e : ι ≃ ι') (f : M [Σ^ι]→ₗ[R] N) (v : ι' → M) :
+    domDomCongr e f v = f (fun i ↦ v (e i)) :=
+  rfl
+
+lemma domDomCongr_trans (e₁ : ι ≃ ι') (e₂ : ι' ≃ ι'') (f : M [Σ^ι]→ₗ[R] N) :
+    domDomCongr (e₁.trans e₂) f = domDomCongr e₂ (domDomCongr e₁ f) :=
+  rfl
+
+@[simp] lemma domDomCongr_refl (f : M [Σ^ι]→ₗ[R] N) :
+    domDomCongr (Equiv.refl ι) f = f :=
+  rfl
+
+variable (R M N)
+variable (S : Type*) [Semiring S] [Module S N] [SMulCommClass R S N]
+
+def domDomCongrLinearEquiv (e : ι ≃ ι') : (M [Σ^ι]→ₗ[R] N) ≃ₗ[S] (M [Σ^ι']→ₗ[R] N) where
+  toFun f := f.domDomCongr e
+  invFun f := f.domDomCongr e.symm
+  left_inv f := by simp [← domDomCongr_trans]
+  right_inv f := by simp [← domDomCongr_trans]
+  map_add' f₁ f₂ := ext fun v ↦ by simp
+  map_smul' c f := ext fun v ↦ by simp
+
+variable {R M N} in
+@[simp] lemma domDomCongrLinearEquiv_apply (e : ι ≃ ι') (f : M [Σ^ι]→ₗ[R] N) (v : ι' → M) :
+    domDomCongrLinearEquiv R M N S e f v = f (fun i ↦ v (e i)) :=
+  rfl
 
 end SymmetricMap
 

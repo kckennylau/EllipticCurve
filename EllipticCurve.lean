@@ -2,6 +2,7 @@ import EllipticCurve.Basic
 import EllipticCurve.Grassmannians.Basic
 import EllipticCurve.Lemmas
 import EllipticCurve.ProjectiveSpace.Basic
+import EllipticCurve.ProjectiveSpace.TensorProduct.BaseChange
 import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricMap
 import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricPower
 import EllipticCurve.Ring.Model

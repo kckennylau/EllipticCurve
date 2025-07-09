@@ -472,6 +472,112 @@ def evalSelf : Sym[R]^n R ≃ₗ[R] R :=
 
 @[simp] lemma evalSelf_coe' : ⇑(evalSelf R n) = eval R R n := rfl
 
+def cast (i j : ℕ) (h : i = j) : Sym[R]^i M ≃ₗ[R] Sym[R]^j M :=
+  .ofLinear (lift _ _ _ _ <| (tprod R).domDomCongr (finCongr h.symm))
+    (lift _ _ _ _ <| (tprod R).domDomCongr (finCongr h))
+    (hom_ext fun v ↦ by simp)
+    (hom_ext fun v ↦ by simp)
+
+@[simp] lemma cast_tprod {i j : ℕ} (h : i = j) (v : Fin i → M) :
+    cast R M i j h (tprod R v) = ⨂ₛ[R] x, v (Fin.cast h.symm x) := by
+  simp [cast]
+
+@[simp] lemma cast_rfl (i : ℕ) : cast R M i i rfl = LinearEquiv.refl R _ :=
+  LinearEquiv.toLinearMap_injective <| hom_ext fun v ↦ by simp
+
+@[simp] lemma cast_coe {i j : ℕ} (h : i = j) : ⇑(cast R M i j h) = _root_.cast (by rw [h]) := by
+  subst h; exact congr(⇑$(cast_rfl R M i))
+
+@[simp] lemma cast_symm {i j : ℕ} (h : i = j) :
+    (cast R M i j h).symm = cast R M j i h.symm := by
+  subst h; simp
+
+@[simp] lemma cast_trans {i j k : ℕ} (h₁ : i = j) (h₂ : j = k) :
+    (cast R M i j h₁).trans (cast R M j k h₂) = cast R M i k (h₁.trans h₂) := by
+  subst h₁; subst h₂; simp
+
+instance : One (Sym[R]^0 M) where
+  one := tprod R ![]
+
+lemma one_def' : (1 : Sym[R]^0 M) = tprod R ![] := rfl
+
+lemma mul_comm' (i j : ℕ) :
+    mul R M i j = (mul R M j i).flip.compr₂ (cast R M _ _ (add_comm j i)) := by
+  ext v w
+  simp only [mul_tprod_tprod, LinearMap.compr₂_apply, LinearMap.flip_apply,
+    LinearEquiv.coe_coe, cast_tprod]
+  rw [eq_comm, ← tprod_perm_apply (finAddFlip.trans (finCongr (add_comm j i)))]
+  congr 1
+  exact funext fun x ↦ x.addCases (by simp) (fun x ↦ by simp)
+
+lemma mul_one' (i : ℕ) : (mul R M i 0).flip 1 = LinearMap.id := by
+  ext v
+  rw [one_def', LinearMap.flip_apply, mul_tprod_tprod]
+  simp only [Nat.add_zero, LinearMap.id_apply]
+  congr 1
+  exact funext fun x ↦ x.addCases (fun x ↦ by rw [Fin.append_left]; simp) (by simp)
+
+variable {R M} in
+@[simp] lemma mul_one_apply {i : ℕ} (x : Sym[R]^i M) : mul R M i 0 x 1 = x :=
+  congr($(mul_one' R M i) x)
+
+lemma one_mul' (j : ℕ) : mul R M 0 j 1 = cast R M j (0 + j) (by simp) := by
+  ext v
+  rw [mul_comm', LinearMap.compr₂_apply, LinearMap.flip_apply, mul_one_apply]
+  simp
+
+lemma cast_one_mul (j : ℕ) : cast R M (0 + j) j (by simp) ∘ₗ mul R M 0 j 1 = LinearMap.id := by
+  rw [one_mul', ← LinearEquiv.coe_trans, cast_trans, cast_rfl, LinearEquiv.refl_toLinearMap]
+
+lemma mul_assoc' {i j k : ℕ} (x : Sym[R]^i M) (y : Sym[R]^j M) (z : Sym[R]^k M) :
+    cast R M _ _ (add_assoc i j k) ((x ✱ y) ✱ z) = x ✱ (y ✱ z) := by
+  refine inductionOn x (by simp [-cast_coe]) (fun r₁ x ↦ ?_) (by intros; simp_all [-cast_coe])
+  simp only [map_smul, LinearMap.smul_apply]
+  congr 1
+  refine inductionOn y (by simp [-cast_coe]) (fun r₂ y ↦ ?_) (by intros; simp_all [-cast_coe])
+  simp only [map_smul, LinearMap.smul_apply]
+  congr 1
+  refine inductionOn z (by simp [-cast_coe]) (fun r₃ z ↦ ?_) (by intros; simp_all [-cast_coe])
+  simp only [mul_tprod_tprod, map_smul, cast_tprod]
+  congr 2
+  refine funext fun p ↦ p.addCases (fun p ↦ ?_) fun p ↦ p.addCases (fun p ↦ ?_) fun p ↦ ?_
+  · simp [show Fin.cast (add_assoc i j k).symm (Fin.castAdd (j + k) p) =
+      Fin.castAdd k (Fin.castAdd j p) by simp [Fin.ext_iff]]
+  · simp [show Fin.cast (add_assoc i j k).symm (Fin.natAdd i (Fin.castAdd k p)) =
+      Fin.castAdd k (Fin.natAdd i p) by simp [Fin.ext_iff]]
+  · simp [show Fin.cast (add_assoc i j k).symm (Fin.natAdd i (Fin.natAdd j p)) =
+      Fin.natAdd (i + j) p by simp [Fin.ext_iff, add_assoc]]
+
+instance gMul : GradedMonoid.GMul (fun n ↦ Sym[R]^n M) where
+  mul x y := mul R M _ _ x y
+
+instance gOne : GradedMonoid.GOne (fun n ↦ Sym[R]^n M) where
+  one := 1
+
+lemma mul_def' (x y : GradedMonoid fun n ↦ Sym[R]^n M) :
+    GradedMonoid.GMul.mul x.snd y.snd = x.snd ✱ y.snd := rfl
+
+variable {R M} in
+@[ext (iff := false)]
+theorem gradedMonoid_eq_of_cast {a b : GradedMonoid fun n => Sym[R]^n M} (h₁ : a.fst = b.fst)
+    (h₂ : cast R M _ _ h₁ a.snd = b.snd) : a = b := by
+  obtain ⟨a₁, a₂⟩ := a
+  obtain ⟨b₁, b₂⟩ := b
+  refine Sigma.ext h₁ (heq_of_cast_eq (by rw [h₁]) ?_)
+  convert h₂
+  rw [cast_coe]
+
+instance gCommMonoid : GradedMonoid.GCommMonoid (fun n ↦ Sym[R]^n M) where
+  mul_one x := Sigma.ext rfl <| heq_of_eq <| mul_one_apply x.2
+  one_mul x := gradedMonoid_eq_of_cast (by simp) congr($(cast_one_mul R M x.1) x.2)
+  mul_assoc x y z := gradedMonoid_eq_of_cast (by simp [add_assoc]) (mul_assoc' ..)
+  mul_comm x y := gradedMonoid_eq_of_cast (by simp [add_comm]) <| by
+    simp only [GradedMonoid.fst_mul, GradedMonoid.snd_mul, mul_def']
+    rw [mul_comm']
+    simp
+
+scoped notation "GSym["R:arg"]" M:arg => GradedMonoid fun n ↦ Sym[R]^n M
+
 end SymmetricPower
 
 end CommSemiring
@@ -484,5 +590,3 @@ variable (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M]
 instance : AddCommGroup (Sym[R]^n M) := AddCon.addCommGroup _
 
 end CommRing
-
--- TODO: GradedMonoid.GMonoid!
