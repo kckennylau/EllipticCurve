@@ -33,15 +33,16 @@ from `M ^ n` to `Sym[R]^n M` by `⨂ₛ[R] i, f i`.
 
 suppress_compilation
 
-universe u u' v w
+universe u u₁ u₂ v v₁ v₂ v₃ w w₁
 
 open TensorProduct Equiv SymmetricMap Function
 
 section CommSemiring
 
-variable (S : Type*) [CommSemiring S] (R : Type u) [CommSemiring R] [Algebra S R]
-  [SMulCommClass S R R] (M : Type v) [AddCommMonoid M] [Module R M]
-  (N : Type w) [AddCommMonoid N] [Module R N] (A : Type u') [CommSemiring A] [Algebra R A] (n : ℕ)
+variable (R : Type u) [CommSemiring R] (M : Type v) [AddCommMonoid M] [Module R M]
+  (N : Type v₁) [AddCommMonoid N] [Module R N] (P : Type v₂) [AddCommMonoid P] [Module R P]
+  (A : Type w) [CommSemiring A] [Algebra R A]
+  (B : Type w₁) [CommSemiring B] [Algebra R B] [Algebra A B] [IsScalarTower R A B] (n : ℕ)
 
 /-- The relation on the `n`ᵗʰ tensor power of `M` that two tensors are equal if they are related by
 a permutation of `Fin n`. -/
@@ -60,6 +61,26 @@ namespace SymmetricPower
 
 instance : AddCommMonoid (Sym[R]^n M) := AddCon.addCommMonoid _
 
+/-- The canonical map from the `n`ᵗʰ tensor power to the `n`ᵗʰ symmetric tensor power. -/
+def mk' : ⨂[R]^n M →+ Sym[R]^n M where
+  __ := AddCon.mk' _
+
+variable {R M n} in
+@[elab_as_elim] lemma mk'_induction {C : Sym[R]^n M → Prop} (ih : ∀ x, C (mk' R M n x))
+    (x : Sym[R]^n M) : C x :=
+  AddCon.induction_on x ih
+
+variable {R M n} in
+@[elab_as_elim] lemma mk'_inductionOn {C : Sym[R]^n M → Prop} (x : Sym[R]^n M)
+    (ih : ∀ x, C (mk' R M n x)) : C x :=
+  AddCon.induction_on x ih
+
+section SMul
+
+open PiTensorProduct
+
+variable {R₁ : Type u₁} [Monoid R₁] [DistribMulAction R₁ R] [SMulCommClass R₁ R R]
+
 variable {R M n} in
 lemma smulAux' (r : R) (x y : ⨂[R]^n M) (h : Rel R M n x y) :
     addConGen (Rel R M n) (r • x) (r • y) := by
@@ -73,52 +94,52 @@ lemma smulAux' (r : R) (x y : ⨂[R]^n M) (h : Rel R M n x y) :
           ← Function.update_comp_equiv, Function.update_eq_self]; rfl
 
 variable {R M n} in
-lemma smulAux (r : S) (x y : ⨂[R]^n M) (h : Rel R M n x y) :
-    addConGen (Rel R M n) (r • x) (r • y) := by
-  convert smulAux' (algebraMap S R r) x y h using 1 <;> rw [algebraMap_smul]
+lemma smulAux (r₁ : R₁) (x y : ⨂[R]^n M) (h : Rel R M n x y) :
+    addConGen (Rel R M n) (r₁ • x) (r₁ • y) := by
+  have := SMulCommClass.isScalarTower R₁ R
+  convert smulAux' (r₁ • 1) x y h using 1 <;> rw [smul_one_smul]
 
-instance smul : SMul S (Sym[R]^n M) where
+instance smul : SMul R₁ (Sym[R]^n M) where
   smul r := AddCon.lift _ ((AddCon.mk' _).comp (AddMonoidHom.smulLeft r)) <|
-    AddCon.addConGen_le fun x y h ↦ Quotient.sound <| by convert smulAux S r x y h
+    AddCon.addConGen_le fun x y h ↦ Quotient.sound <| by convert smulAux r x y h
 
-/-- The canonical map from the `n`ᵗʰ tensor power to the `n`ᵗʰ symmetric tensor power. -/
-def mk' : ⨂[R]^n M →+ Sym[R]^n M where
-  __ := AddCon.mk' _
-
-variable {S R M n} in
-lemma smul_def (r : S) (x : ⨂[R]^n M) : r • mk' R M n x = mk' R M n (r • x) :=
+variable {R M n} in
+lemma smul_def (r : R₁) (x : ⨂[R]^n M) : r • mk' R M n x = mk' R M n (r • x) :=
   rfl
 
-variable {R M n} in
-@[elab_as_elim] lemma mk_induction {C : Sym[R]^n M → Prop} (ih : ∀ x, C (mk' R M n x))
-    (x : Sym[R]^n M) : C x :=
-  AddCon.induction_on x ih
+variable {R₂ : Type u₂} [Monoid R₂] [DistribMulAction R₂ R] [SMulCommClass R₂ R R]
+  [SMul R₁ R₂] [IsScalarTower R₁ R₂ R]
 
-variable {R M n} in
-@[elab_as_elim] lemma mk_inductionOn {C : Sym[R]^n M → Prop} (x : Sym[R]^n M)
-    (ih : ∀ x, C (mk' R M n x)) : C x :=
-  AddCon.induction_on x ih
+instance : IsScalarTower R₁ R₂ (Sym[R]^n M) where
+  smul_assoc x y := mk'_induction fun z ↦ by simp [smul_def]
 
-instance module : Module S (Sym[R]^n M) where
-  one_smul := mk_induction fun x ↦ congr_arg (mk' R M n) <| one_smul S x
-  mul_smul r s := mk_induction fun x ↦ congr_arg (mk' R M n) <| mul_smul r s x
-  zero_smul := mk_induction fun x ↦ congr_arg (mk' R M n) <| zero_smul _ x
-  add_smul r s := mk_induction fun x ↦ congr_arg (mk' R M n) <| add_smul r s x
+end SMul
+
+instance module (R₁ : Type u₁) [Semiring R₁] [Module R₁ R] [SMulCommClass R₁ R R] :
+    Module R₁ (Sym[R]^n M) where
+  one_smul := mk'_induction fun x ↦ congr_arg (mk' R M n) <| one_smul R₁ x
+  mul_smul r s := mk'_induction fun x ↦ congr_arg (mk' R M n) <| mul_smul r s x
+  zero_smul := mk'_induction fun x ↦ congr_arg (mk' R M n) <| zero_smul R₁ x
+  add_smul r s := mk'_induction fun x ↦ congr_arg (mk' R M n) <| add_smul r s x
   smul_zero _ := map_zero _
   smul_add _ := map_add _
 
 -- shortcut instance
 instance : Module R (Sym[R]^n M) :=
-  module R R M n
-
-variable [Module S M] [IsScalarTower S R M]
-instance : IsScalarTower S R (Sym[R]^n M) where
-  smul_assoc r s := mk_induction fun x ↦ congr_arg (mk' R M n) <| smul_assoc r s x
+  module R M n R
 
 /-- The canonical map from the `n`ᵗʰ tensor power to the `n`ᵗʰ symmetric tensor power. -/
 def mk : ⨂[R]^n M →ₗ[R] Sym[R]^n M where
   map_smul' _ _ := rfl
   __ := AddCon.mk' _
+
+@[elab_as_elim] lemma mk_induction {C : Sym[R]^n M → Prop} (ih : ∀ x, C (mk R M n x))
+    (x : Sym[R]^n M) : C x :=
+  mk'_induction ih x
+
+@[elab_as_elim] lemma mk_inductionOn {C : Sym[R]^n M → Prop} (x : Sym[R]^n M)
+    (ih : ∀ x, C (mk R M n x)) : C x :=
+  mk'_inductionOn x ih
 
 variable {M n} in
 /-- The multilinear map that takes `n` elements of `M` and returns their symmetric tensor product.
@@ -153,6 +174,12 @@ variable {R M n} in
   obtain ⟨x, rfl⟩ := AddCon.mk'_surjective x
   refine FreeAddMonoid.inductionOn x zero (fun ⟨r, x⟩ ↦ ?_) fun _ _ ↦ add _ _
   simpa [tprod, ← map_smul, ← PiTensorProduct.tprodCoeff_eq_smul_tprod] using smul_tprod r x
+
+variable {R M n} in
+@[elab_as_elim] lemma induction {C : Sym[R]^n M → Prop}
+    (zero : C 0) (smul_tprod : ∀ (r : R) x, C (r • tprod R x)) (add : ∀ x y, C x → C y → C (x + y))
+    (x : Sym[R]^n M) : C x :=
+  inductionOn x zero smul_tprod add
 
 variable {R M N n} in
 omit [Module R N] in
@@ -199,6 +226,41 @@ variable {R M N} in
 def map (f : M →ₗ[R] N) : Sym[R]^n M →ₗ[R] Sym[R]^n N :=
   lift _ _ _ _ <| (tprod R).compLinearMap f
 
+@[simp] lemma map_tprod (f : M →ₗ[R] N) (x : Fin n → M) :
+    map n f (tprod R x) = ⨂ₛ[R] i, f (x i) := by
+  simp [map]
+
+/-- Functoriality of `map`. -/
+@[simp] lemma map_id : map n (LinearMap.id : M →ₗ[R] M) = LinearMap.id :=
+  hom_ext fun x ↦ by simp
+
+variable {R M N P} in
+/-- Functoriality of `map`. -/
+lemma map_comp (f : N →ₗ[R] P) (g : M →ₗ[R] N) :
+    map n (f ∘ₗ g) = map n f ∘ₗ map n g :=
+  hom_ext fun x ↦ by simp
+
+variable {R M N P} in
+@[simp] lemma map_map_apply (f : N →ₗ[R] P) (g : M →ₗ[R] N) (x : Sym[R]^n M) :
+    map n f (map n g x) = map n (f ∘ₗ g) x := by
+  simp [map_comp]
+
+variable {R M N} in
+/-- `map` converts linear equiv to linear equiv. -/
+def mapLinearEquiv (e : M ≃ₗ[R] N) : Sym[R]^n M ≃ₗ[R] Sym[R]^n N :=
+  .ofLinear (map n e) (map n e.symm)
+    (by rw [← map_comp, e.comp_symm, map_id])
+    (by rw [← map_comp, e.symm_comp, map_id])
+
+@[simp] lemma mapLinearEquiv_coe (e : M ≃ₗ[R] N) :
+    (mapLinearEquiv n e).toLinearMap = map n e := rfl
+
+@[simp] lemma mapLinearEquiv_coe' (e : M ≃ₗ[R] N) :
+    ⇑(mapLinearEquiv n e) = map n e := rfl
+
+@[simp] lemma mapLinearEquiv_symm (e : M ≃ₗ[R] N) :
+    (mapLinearEquiv n e).symm = mapLinearEquiv n e.symm := rfl
+
 def mul (i j : ℕ) : Sym[R]^i M →ₗ[R] Sym[R]^j M →ₗ[R] Sym[R]^(i + j) M :=
   lift _ _ _ _ <|
   { toFun f := lift _ _ _ _ <|
@@ -215,7 +277,50 @@ def mul (i j : ℕ) : Sym[R]^i M →ₗ[R] Sym[R]^j M →ₗ[R] Sym[R]^(i + j) M
       convert (tprod_perm_apply (Fin.permAdd e 1) _) using 2
       ext x; exact x.addCases (by simp) (by simp) }
 
-def zero_equiv : Sym[R]^0 M ≃ₗ[R] R where
+scoped infixl:70 "✱" => SymmetricPower.mul _ _ _ _
+
+variable {R M N} in
+@[simp] lemma map_mul (i j : ℕ) (f : M →ₗ[R] N) :
+    (mul R M i j).compr₂ (map (i + j) f) = (mul R N i j).compl₁₂ (map i f) (map j f) :=
+  hom_ext fun v ↦ hom_ext fun w ↦ by simp [mul, Fin.apply_append_apply, Function.comp_def]
+
+variable {R M N} in
+@[simp] lemma map_mul_apply {i j : ℕ} (f : M →ₗ[R] N) (x : Sym[R]^i M) (y : Sym[R]^j M) :
+    map (i + j) f (x ✱ y) = map i f x ✱ map j f y :=
+  congr($(map_mul i j f) x y)
+
+section simp_lemmas
+
+-- We hard code special cases with small numbers.
+variable {R M N} (f : M →ₗ[R] N)
+
+@[simp] lemma map_mul_one_one (x y : Sym[R]^1 M) :
+    map 2 f (x ✱ y) = map 1 f x ✱ map 1 f y :=
+  map_mul_apply f x y
+
+@[simp] lemma map_mul_one_two (x : Sym[R]^1 M) (y : Sym[R]^2 M) :
+    map 3 f (x ✱ y) = map 1 f x ✱ map 2 f y :=
+  map_mul_apply f x y
+
+@[simp] lemma map_mul_two_one (x : Sym[R]^2 M) (y : Sym[R]^1 M) :
+    map 3 f (x ✱ y) = map 2 f x ✱ map 1 f y :=
+  map_mul_apply f x y
+
+@[simp] lemma map_mul_one_three (x : Sym[R]^1 M) (y : Sym[R]^3 M) :
+    map 4 f (x ✱ y) = map 1 f x ✱ map 3 f y :=
+  map_mul_apply f x y
+
+@[simp] lemma map_mul_two_two (x y : Sym[R]^2 M) :
+    map 4 f (x ✱ y) = map 2 f x ✱ map 2 f y :=
+  map_mul_apply f x y
+
+@[simp] lemma map_mul_three_one (x : Sym[R]^3 M) (y : Sym[R]^1 M) :
+    map 4 f (x ✱ y) = map 3 f x ✱ map 1 f y :=
+  map_mul_apply f x y
+
+end simp_lemmas
+
+@[simps!] def zero_equiv : Sym[R]^0 M ≃ₗ[R] R where
   __ := lift R M R 0 ((ofIsEmpty R M R (Fin 0)).symm 1)
   invFun r := r • tprod R ![]
   left_inv x := by
@@ -225,7 +330,7 @@ def zero_equiv : Sym[R]^0 M ≃ₗ[R] R where
     | add x y hx hy => simp_all [add_smul]
   right_inv r := by simp
 
-def one_equiv : Sym[R]^1 M ≃ₗ[R] M where
+@[simps!] def one_equiv : Sym[R]^1 M ≃ₗ[R] M where
   __ := lift R M M 1 ((ofSubsingleton R M M 0).symm 1)
   invFun m := tprod R ![m]
   left_inv x := by
@@ -241,8 +346,6 @@ def one_equiv : Sym[R]^1 M ≃ₗ[R] M where
         conv => enter [2]; rw [← hx, ← hy]
         simp [this]
   right_inv m := by simp
-
-scoped infix:70 "✱" => SymmetricPower.mul _ _
 
 def toBaseChange : (Sym[R]^n M) →ₗ[R] (Sym[A]^n (A ⊗[R] M)) :=
   lift _ _ _ _ <| ((tprod A).restrictScalars R).compLinearMap (TensorProduct.mk R A M 1)
@@ -268,6 +371,107 @@ lemma baseChange_one_tmul_tprod (x : Fin n → M) :
     baseChange R M A n (1 ⊗ₜ[R] tprod R x) = ⨂ₛ[A] i, (1 ⊗ₜ x i) := by
   simp
 
+variable {R M N} in
+theorem map_comp_toBaseChange (f : M →ₗ[R] N) :
+    (map n (f.baseChange A)).restrictScalars R ∘ₗ toBaseChange R M A n =
+      toBaseChange R N A n ∘ₗ map n f :=
+  hom_ext <| by simp
+
+variable {R M N n} in
+lemma map_toBaseChange_apply (f : M →ₗ[R] N) (x : Sym[R]^n M) :
+    map n (f.baseChange A) (toBaseChange R M A n x) =
+      toBaseChange R N A n (map n f x) :=
+  congr($(map_comp_toBaseChange A n f) x)
+
+variable {R M N} in
+/-- Naturality of `baseChange`. -/
+theorem map_comp_baseChange (f : M →ₗ[R] N) :
+    map n (f.baseChange A) ∘ₗ baseChange R M A n =
+      baseChange R N A n ∘ₗ (map n f).baseChange A :=
+  (LinearMap.liftBaseChangeEquiv A).symm.injective <| hom_ext <| by simp
+
+variable {R M N A n} in
+lemma map_baseChange_apply (f : M →ₗ[R] N) (x : A ⊗[R] Sym[R]^n M) :
+    map n (f.baseChange A) (baseChange R M A n x) =
+      baseChange R N A n ((map n f).baseChange A x) :=
+  congr($(map_comp_baseChange A n f) x)
+
+lemma toBaseChange_of_isScalarTower :
+    (toBaseChange R M B n).restrictScalars R =
+      (map n (AlgebraTensorModule.cancelBaseChange R A B B M)).restrictScalars R ∘ₗ
+        (toBaseChange A (A ⊗[R] M) B n).restrictScalars R ∘ₗ
+          (toBaseChange R M A n) :=
+  hom_ext fun v ↦ by simp
+
+variable {R M n} in
+lemma toBaseChange_apply_of_isScalarTower (x : Sym[R]^n M) :
+    toBaseChange R M B n x =
+      map n (AlgebraTensorModule.cancelBaseChange R A B B M).toLinearMap
+        (toBaseChange A (A ⊗[R] M) B n <| toBaseChange R M A n x) :=
+  congr($(toBaseChange_of_isScalarTower R M A B n) x)
+
+section Algebra
+
+variable [Module A M] [IsScalarTower R A M]
+
+@[simp] lemma mul_tprod_tprod (i j : ℕ) (v : Fin i → M) (w : Fin j → M) :
+    mul R M i j (tprod R v) (tprod R w) = tprod R (Fin.append v w) := by
+  simp [mul]
+
+instance : One (Sym[R]^n A) where
+  one := tprod R 1
+
+lemma one_def : (1 : Sym[R]^n A) = tprod R 1 := rfl
+
+def eval : Sym[R]^n A →ₗ[R] A :=
+  lift _ _ _ _ <| mkPiAlgebra R (Fin n) A
+
+@[simp] lemma eval_tprod (v : Fin n → A) :
+    eval R A n (tprod R v) = ∏ i, v i := by
+  simp [eval]
+
+@[simp] lemma eval_one : eval R A n 1 = 1 := by
+  simp [one_def]
+
+@[simp] lemma eval_mul (i j : ℕ) :
+    (mul R A i j).compr₂ (eval R A (i + j)) =
+      (LinearMap.mul R A).compl₁₂ (eval R A i) (eval R A j) :=
+  hom_ext fun v ↦ hom_ext fun w ↦ by simp [Fin.prod_univ_add]
+
+@[simp] lemma eval_mul_apply (i j : ℕ) (v : Sym[R]^i A) (w : Sym[R]^j A) :
+    eval R A (i + j) (mul R A i j v w) = eval R A i v * eval R A j w :=
+  congr($(eval_mul R A i j) v w)
+
+section simp_lemmas
+
+-- custom simp lemmas for concrete small values
+
+@[simp] lemma eval_mul_one_one (v w : Sym[R]^1 A) :
+    eval R A 2 (mul R A 1 1 v w) = eval R A 1 v * eval R A 1 w :=
+  eval_mul_apply R A 1 1 v w
+
+@[simp] lemma eval_mul_two_one (v : Sym[R]^2 A) (w : Sym[R]^1 A) :
+    eval R A 3 (mul R A 2 1 v w) = eval R A 2 v * eval R A 1 w :=
+  eval_mul_apply R A 2 1 v w
+
+@[simp] lemma eval_mul_one_two (v : Sym[R]^1 A) (w : Sym[R]^2 A) :
+    eval R A 3 (mul R A 1 2 v w) = eval R A 1 v * eval R A 2 w :=
+  eval_mul_apply R A 1 2 v w
+
+end simp_lemmas
+
+end Algebra
+
+def evalSelf : Sym[R]^n R ≃ₗ[R] R :=
+  .ofLinear (eval R R n)
+    (LinearMap.smulRight (S := R) 1 1)
+    ((LinearMap.ringLmapEquivSelf R R _).injective <| by simp)
+    (hom_ext fun v ↦ by simp [one_def, ← map_smul_univ])
+
+@[simp] lemma evalSelf_coe : (evalSelf R n).toLinearMap = eval R R n := rfl
+
+@[simp] lemma evalSelf_coe' : ⇑(evalSelf R n) = eval R R n := rfl
+
 end SymmetricPower
 
 end CommSemiring
@@ -280,3 +484,5 @@ variable (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M]
 instance : AddCommGroup (Sym[R]^n M) := AddCon.addCommGroup _
 
 end CommRing
+
+-- TODO: GradedMonoid.GMonoid!

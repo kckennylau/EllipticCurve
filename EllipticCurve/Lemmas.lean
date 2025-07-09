@@ -23,6 +23,15 @@ These are small lemmas that can be immediatly PR'ed to Mathlib.
 
 universe u v w
 
+@[simp] lemma comp_vecCons {α β : Type*} {n : ℕ} (f : Fin n → α) (x : α) (g : α → β) :
+    g ∘ Matrix.vecCons x f = Matrix.vecCons (g x) (g ∘ f) := by
+  ext i; cases i using Fin.cases <;> simp
+
+@[simp] lemma comp_vecEmpty {α β : Type*} {g : α → β} :
+    g ∘ Matrix.vecEmpty = Matrix.vecEmpty :=
+  funext nofun
+
+
 namespace Con
 
 variable (M : Type*) {N : Type*} {P : Type*}
@@ -44,6 +53,13 @@ namespace Fin
 open Equiv Function
 
 variable {M : Type*} {i j : ℕ} (f : Fin i → M) (g : Fin j → M)
+
+lemma apply_append_apply {N : Type*} (v : M → N) (p : Fin (i + j)) :
+    v (append f g p) = append (v ∘ f) (v ∘ g) p :=
+  p.addCases (by simp) (by simp)
+
+lemma comp_append {N : Type*} (v : M → N) : v ∘ append f g = append (v ∘ f) (v ∘ g) :=
+  funext <| apply_append_apply f g v
 
 @[simp] lemma append_update_left (c : Fin i) (x : M)
     [DecidableEq (Fin i)] [DecidableEq (Fin (i + j))] :
@@ -203,6 +219,13 @@ lemma Submodule.quotientBaseChange_symm_apply {R : Type u} {M : Type v} (A : Typ
     (S.quotientBaseChange A).symm (a ⊗ₜ (Quotient.mk m)) = Quotient.mk (a ⊗ₜ m) :=
   (LinearEquiv.symm_apply_eq _).2 <| Submodule.quotientBaseChange_apply ..
 
+@[simp] lemma Submodule.quotientBaseChange_comp_baseChange_mkQ
+    {R : Type u} {M : Type v} (A : Type w)
+    [CommRing R] [Ring A] [Algebra R A] [AddCommGroup M] [Module R M]
+    (S : Submodule R M) :
+    (S.quotientBaseChange A).toLinearMap ∘ₗ (S.baseChange A).mkQ = S.mkQ.baseChange A :=
+  LinearMap.restrictScalars_injective R <| TensorProduct.ext' fun r x ↦ by simp
+
 /-- The triangle of `R`-modules `A ⊗[R] M ⟶ B ⊗[A] (A ⊗[R] M) ⟶ B ⊗[R] M` commutes. -/
 lemma AlgebraTensorModule.cancelBaseChange_comp_mk_one {R A B M : Type*}
     [CommSemiring R] [CommSemiring A] [Semiring B] [AddCommMonoid M] [Module R M]
@@ -253,3 +276,8 @@ lemma LinearEquiv.piRing_symm_apply_single_one {R M ι S : Type*} [Semiring R] [
     (f : ι → M) (i : ι) :
     (LinearEquiv.piRing R M ι S).symm f (Pi.single i 1) = f i := by
   rw [piRing_symm_apply_single, one_smul]
+
+theorem SMulCommClass.isScalarTower (R₁ : Type u) (R : Type v) [Monoid R₁]
+  [CommMonoid R] [MulAction R₁ R] [SMulCommClass R₁ R R] : IsScalarTower R₁ R R where
+  smul_assoc x₁ y z := by rw [smul_eq_mul, mul_comm, ← smul_eq_mul, ← smul_comm, smul_eq_mul,
+    mul_comm, ← smul_eq_mul]

@@ -21,6 +21,8 @@ universe u u' u₁ u₂ u₃ v w w'
 
 open Equiv MultilinearMap Function
 
+section Semiring
+
 variable (R : Type u) [Semiring R] (M : Type v) [AddCommMonoid M] [Module R M]
   (N : Type w) [AddCommMonoid N] [Module R N]
   (P : Type w') [AddCommMonoid P] [Module R P] (ι : Type u')
@@ -319,3 +321,25 @@ def restrictScalars (S : Type*) [Semiring S] [SMul S R] [Module S M] [Module S N
   ⟨f.1.restrictScalars S, fun v e ↦ f.2 v e⟩
 
 end SymmetricMap
+
+end Semiring
+
+
+section CommSemiring
+
+variable {R : Type u} [CommSemiring R] {M : Type v} [AddCommMonoid M] [Module R M]
+  {N : Type w} [AddCommMonoid N] [Module R N] {ι : Type u'}
+
+lemma map_smul_univ [Fintype ι] (f : M [Σ^ι]→ₗ[R] N) (c : ι → R) (v : ι → M) :
+    f (fun i ↦ c i • v i) = (∏ i, c i) • f v :=
+  MultilinearMap.map_smul_univ f.1 c v
+
+variable (R ι) (A : Type w') [CommSemiring A] [Algebra R A]
+
+def mkPiAlgebra [Fintype ι] : A [Σ^ι]→ₗ[R] A :=
+  ⟨.mkPiAlgebra R ι A, fun v e ↦ by simp [Fintype.prod_equiv e]⟩
+
+@[simp] lemma mkPiAlgebra_apply [Fintype ι] (v : ι → A) :
+    mkPiAlgebra R ι A v = ∏ i, v i := rfl
+
+end CommSemiring
