@@ -136,19 +136,19 @@ variable (R) in
 /-- The affine chart corresponding to a chosen `x : R^k → M`, represented by `k` elements in `M`.
 It is the quotients `q : M ↠ V` such that the composition `x ∘ q : R^k → V` is an isomorphism. -/
 def chart (x : Fin k → M) : Set G(k, M; R) :=
-  { N | Function.Bijective (N.mkQ ∘ (LinearEquiv.piRing R M (Fin k) R).symm x) }
+  { N | Function.Bijective (N.mkQ ∘ Fintype.linearCombination R x) }
 -- TODO: `chart f` is affine
 -- Proof sketch: we have equalizer diagram `chart f → Hom[R-Mod](M,R^k) ⇒ Hom[R-Mod](R^k,R^k)`
 
 /-- An element `N ∈ chart R f` produces an isomorphism `M ⧸ N ≃ₗ[R] R^k`. -/
 noncomputable def equivOfChart {x : Fin k → M} {N : G(k, M; R)} (hn : N ∈ chart R x) :
     (M ⧸ (N : Submodule R M)) ≃ₗ[R] (Fin k → R) :=
-  (LinearEquiv.ofBijective (N.mkQ ∘ₗ _) hn).symm
+  (LinearEquiv.ofBijective (N.mkQ ∘ₗ Fintype.linearCombination R x) hn).symm
 
 @[simp] lemma equivOfChart_apply {x : Fin k → M} {N : G(k, M; R)} (hn : N ∈ chart R x) (i : Fin k) :
     equivOfChart hn (Submodule.Quotient.mk (x i)) = Pi.single i 1 := by
   rw [equivOfChart, LinearEquiv.symm_apply_eq]
-  simp [-LinearEquiv.piRing_symm_apply, LinearEquiv.piRing_symm_apply_single_one]
+  simp
 
 @[simp] lemma equivOfChart_apply_apply {x : Fin k → M} {N : G(k, M; R)} (hn : N ∈ chart R x)
     (i j : Fin k) :
@@ -162,7 +162,7 @@ lemma ofEquiv_mem_chart {N : Submodule R M} (e : (M ⧸ N) ≃ₗ[R] (Fin k → 
   convert e.symm.bijective using 1
   refine DFunLike.coe_fn_eq.2 (LinearMap.pi_ext' fun i ↦ LinearMap.ext_ring <| Eq.symm <|
     e.symm_apply_eq.2 ?_)
-  simp [-LinearEquiv.piRing_symm_apply, LinearEquiv.piRing_symm_apply_single_one, hx]
+  simp [hx]
 
 lemma ofSurjective_mem_chart {q : M →ₗ[R] Fin k → R} (hq : Function.Surjective q)
     (f : Fin k → M) (hf : ∀ i, q (f i) = Pi.single i 1) :
@@ -301,6 +301,57 @@ noncomputable def chartToFunctor (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (k 
     (x : Fin k → M) :
     chartFunctor R M k x ⟶ functor R M k where
   app A := Subtype.val
+
+
+namespace Corepresentable
+
+/-!
+# Corepresentability of chart
+
+We show that `chart x` is the equalizer of `Hom[R](M, R^k) ⥤ Hom[R](R^k, R^k)`.
+
+We call `Hom[R](M, R^k)` "left" and `Hom[R](R^k, R^k)` "right".
+-/
+
+variable (R M k) (x : Fin k → M)
+
+/-- The first module in the equaliser diagram. -/
+abbrev left : Type (max u v) :=
+  M →ₗ[R] (Fin k → R)
+
+/-- The second module in the equaliser diagram. -/
+abbrev right : Type u :=
+  (Fin k → R) →ₗ[R] (Fin k → R)
+
+variable {M k} in
+/-- The first map `left ⟶ right`. -/
+@[simp] def compose : left R M k → right R k :=
+  fun f ↦ f ∘ₗ Fintype.linearCombination R x
+
+variable {M k} in
+/-- The second map `left ⟶ right`. -/
+@[simp] def const1 : left R M k → right R k :=
+  fun _ ↦ LinearMap.id
+
+variable {R M k x} in
+lemma surjective_of_compose_eq_const1 {f : left R M k} (h : compose R x f = const1 R f) :
+    Function.Surjective f :=
+  fun p ↦ ⟨Fintype.linearCombination R x p, congr($h p)⟩
+
+/-- The isomorphism between `chart x` and the equaliser of `compose, const1 : left ⟶ right`. -/
+noncomputable def chartEquivEq : chart R x ≃ {f : left R M k // compose R x f = const1 R f} where
+  toFun N := ⟨equivOfChart N.2 ∘ₗ N.1.mkQ, LinearMap.pi_ext' fun i ↦ LinearMap.ext_ring <| by simp⟩
+  invFun f := ⟨ofSurjective f.1 <| surjective_of_compose_eq_const1 f.2,
+    ofSurjective_mem_chart _ _ fun i ↦ by simpa using congr($(f.2) (Pi.single i 1))⟩
+  left_inv N := by ext; simp
+  right_inv f := Subtype.ext <| LinearMap.ext fun p ↦ (LinearEquiv.symm_apply_eq _).2 <|
+      (LinearMap.quotKerEquivOfSurjective _ (surjective_of_compose_eq_const1 f.2)).injective <| by
+        simpa using congr($(f.2.symm) (f.1 p))
+
+-- variable (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (k : ℕ)
+
+end Corepresentable
+
 
 end Grassmannian
 
