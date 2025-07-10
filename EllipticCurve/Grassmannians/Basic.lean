@@ -345,10 +345,18 @@ noncomputable def chartEquivEq : chart R x ≃ {f : left R M k // compose R x f 
     ofSurjective_mem_chart _ _ fun i ↦ by simpa using congr($(f.2) (Pi.single i 1))⟩
   left_inv N := by ext; simp
   right_inv f := Subtype.ext <| LinearMap.ext fun p ↦ (LinearEquiv.symm_apply_eq _).2 <|
-      (LinearMap.quotKerEquivOfSurjective _ (surjective_of_compose_eq_const1 f.2)).injective <| by
-        simpa using congr($(f.2.symm) (f.1 p))
+    (LinearMap.quotKerEquivOfSurjective _ (surjective_of_compose_eq_const1 f.2)).injective <| by
+      simpa using congr($(f.2.symm) (f.1 p))
 
--- variable (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (k : ℕ)
+def leftBaseChange : left R M k → left A (A ⊗[R] M) k :=
+  fun f ↦ TensorProduct.piScalarRightHom ∘ₗ f.baseChange A
+
+variable (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (k : ℕ) (x : Fin k → M)
+
+/-- `left` as a functor. -/
+def leftFunctor : Under R ⥤ Type (max u v) where
+  obj A := left A (A ⊗[R] M) k
+  map f := _
 
 end Corepresentable
 
