@@ -136,10 +136,10 @@ lemma baseChangeFin_apply_one_tmul (f : MultilinearMap R M₂ N)
     (c : Fin n → A) (v : (i : Fin n) → M₂ i) :
     baseChangeFin R N A n M₂ f (fun i ↦ c i ⊗ₜ v i) = (∏ i, c i) ⊗ₜ f v := calc
   _ = baseChangeFin R N A n M₂ f (fun i ↦ c i • (1 ⊗ₜ v i)) :=
-        congrArg _ <| funext fun i ↦ tsmul_eq_smul_one_tuml (c i) (v i)
+        congrArg _ <| funext fun i ↦ tmul_eq_smul_one_tmul (c i) (v i)
   _ = (∏ i, c i) • baseChangeFin R N A n M₂ f (fun i ↦ 1 ⊗ₜ v i) := map_smul_univ _ _ _
   _ = (∏ i, c i) • (1 ⊗ₜ f v) := congrArg _ <| baseChangeFin_apply_one_tmul f v
-  _ = (∏ i, c i) ⊗ₜ f v := (tsmul_eq_smul_one_tuml (∏ i, c i) (f v)).symm
+  _ = (∏ i, c i) ⊗ₜ f v := (tmul_eq_smul_one_tmul (∏ i, c i) (f v)).symm
 
 variable (R M₁ N A) in
 /-- Base change for multilinear maps with a (finite) indexing type, with a chosen equiv `ι ≃ Fin n`.

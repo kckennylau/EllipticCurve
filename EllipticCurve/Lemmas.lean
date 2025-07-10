@@ -32,22 +32,6 @@ universe u v w
   funext nofun
 
 
-namespace Con
-
-variable (M : Type*) {N : Type*} {P : Type*}
-variable {M}
-variable [MulOneClass M] [MulOneClass N] [MulOneClass P] {c : Con M}
-
-/-- Extensionality for maps `f, g : M⧸~ →* N`: they are equal if their composition with
-`mk' : M → M⧸~` are equal. -/
-@[to_additive (attr := ext) "Extensionality for maps `f, g : M⧸~ →+ N`: they are equal if their
-composition with `mk' : M → M⧸~` are equal."]
-lemma hom_ext {f g : c.Quotient →* P} (h : f.comp (mk' c) = g.comp (mk' c)) : f = g :=
-  lift_funext _ _ fun x ↦ DFunLike.congr_fun h x
-
-end Con
-
-
 namespace Fin
 
 open Equiv Function

@@ -294,27 +294,27 @@ section simp_lemmas
 -- We hard code special cases with small numbers.
 variable {R M N} (f : M →ₗ[R] N)
 
-@[simp] lemma map_mul_one_one (x y : Sym[R]^1 M) :
+@[simp] lemma map_mul_one_one (x y : Sym[R]^1M) :
     map 2 f (x ✱ y) = map 1 f x ✱ map 1 f y :=
   map_mul_apply f x y
 
-@[simp] lemma map_mul_one_two (x : Sym[R]^1 M) (y : Sym[R]^2 M) :
+@[simp] lemma map_mul_one_two (x : Sym[R]^1M) (y : Sym[R]^2M) :
     map 3 f (x ✱ y) = map 1 f x ✱ map 2 f y :=
   map_mul_apply f x y
 
-@[simp] lemma map_mul_two_one (x : Sym[R]^2 M) (y : Sym[R]^1 M) :
+@[simp] lemma map_mul_two_one (x : Sym[R]^2M) (y : Sym[R]^1M) :
     map 3 f (x ✱ y) = map 2 f x ✱ map 1 f y :=
   map_mul_apply f x y
 
-@[simp] lemma map_mul_one_three (x : Sym[R]^1 M) (y : Sym[R]^3 M) :
+@[simp] lemma map_mul_one_three (x : Sym[R]^1M) (y : Sym[R]^3M) :
     map 4 f (x ✱ y) = map 1 f x ✱ map 3 f y :=
   map_mul_apply f x y
 
-@[simp] lemma map_mul_two_two (x y : Sym[R]^2 M) :
+@[simp] lemma map_mul_two_two (x y : Sym[R]^2M) :
     map 4 f (x ✱ y) = map 2 f x ✱ map 2 f y :=
   map_mul_apply f x y
 
-@[simp] lemma map_mul_three_one (x : Sym[R]^3 M) (y : Sym[R]^1 M) :
+@[simp] lemma map_mul_three_one (x : Sym[R]^3M) (y : Sym[R]^1M) :
     map 4 f (x ✱ y) = map 3 f x ✱ map 1 f y :=
   map_mul_apply f x y
 
@@ -359,7 +359,7 @@ def baseChange : (A ⊗[R] Sym[R]^n M) ≃ₗ[A] Sym[A]^n (A ⊗[R] M) :=
   .ofLinear (LinearMap.liftBaseChangeEquiv A <| toBaseChange R M A n)
     (lift A _ _ _ <| SymmetricMap.baseChange _ _ _ _ _ (tprod R))
     ((lift _ _ _ _).symm.injective <| baseChange_hom_ext fun v ↦ by simp)
-    ((LinearMap.liftBaseChangeEquiv A).symm.injective <| hom_ext fun v ↦ by simp)
+    (by ext; simp)
 
 variable {M A n} in
 @[simp] lemma baseChange_tmul_tprod (r : A) (x : Fin n → M) :
@@ -387,8 +387,8 @@ variable {R M N} in
 /-- Naturality of `baseChange`. -/
 theorem map_comp_baseChange (f : M →ₗ[R] N) :
     map n (f.baseChange A) ∘ₗ baseChange R M A n =
-      baseChange R N A n ∘ₗ (map n f).baseChange A :=
-  (LinearMap.liftBaseChangeEquiv A).symm.injective <| hom_ext <| by simp
+      baseChange R N A n ∘ₗ (map n f).baseChange A := by
+  ext; simp
 
 variable {R M N A n} in
 lemma map_baseChange_apply (f : M →ₗ[R] N) (x : A ⊗[R] Sym[R]^n M) :
@@ -446,15 +446,15 @@ section simp_lemmas
 
 -- custom simp lemmas for concrete small values
 
-@[simp] lemma eval_mul_one_one (v w : Sym[R]^1 A) :
+@[simp] lemma eval_mul_one_one (v w : Sym[R]^1A) :
     eval R A 2 (mul R A 1 1 v w) = eval R A 1 v * eval R A 1 w :=
   eval_mul_apply R A 1 1 v w
 
-@[simp] lemma eval_mul_two_one (v : Sym[R]^2 A) (w : Sym[R]^1 A) :
+@[simp] lemma eval_mul_two_one (v : Sym[R]^2A) (w : Sym[R]^1A) :
     eval R A 3 (mul R A 2 1 v w) = eval R A 2 v * eval R A 1 w :=
   eval_mul_apply R A 2 1 v w
 
-@[simp] lemma eval_mul_one_two (v : Sym[R]^1 A) (w : Sym[R]^2 A) :
+@[simp] lemma eval_mul_one_two (v : Sym[R]^1A) (w : Sym[R]^2A) :
     eval R A 3 (mul R A 1 2 v w) = eval R A 1 v * eval R A 2 w :=
   eval_mul_apply R A 1 2 v w
 
