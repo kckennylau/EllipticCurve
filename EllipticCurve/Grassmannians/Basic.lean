@@ -10,6 +10,7 @@ import Mathlib.CategoryTheory.Comma.Over.Basic
 import Mathlib.LinearAlgebra.TensorProduct.Quotient
 import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.RingTheory.Spectrum.Prime.FreeLocus
+import Mathlib.RingTheory.Grassmannian
 
 /-!
 # Grassmannians
@@ -35,31 +36,11 @@ namespace Module
 
 variable (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M] (k : ℕ)
 
-/-- `G(k, M; R)` is the `k`ᵗʰ Grassmannian of the `R`-module `M`. It is defined to be the set of
-submodules of `M` whose quotient is locally free of rank `k`. Note that there is another convention
-in literature where instead the submodule is required to have rank `k`. See the module docstring
-of `RingTheory.Grassmannian`. -/
-@[stacks 089R] structure Grassmannian extends Submodule R M where
-  finite_quotient : Module.Finite R (M ⧸ toSubmodule)
-  projective_quotient : Projective R (M ⧸ toSubmodule)
-  rankAtStalk_eq : ∀ p, rankAtStalk (R := R) (M ⧸ toSubmodule) p = k := by simp
-
-attribute [instance] Grassmannian.finite_quotient Grassmannian.projective_quotient
 attribute [simp] Grassmannian.rankAtStalk_eq
 
 namespace Grassmannian
 
-@[inherit_doc] scoped notation "G("k", "M"; "R")" => Grassmannian R M k
-
-attribute [coe] toSubmodule
-
 variable {R M k}
-
-instance : CoeOut G(k, M; R) (Submodule R M) :=
-  ⟨toSubmodule⟩
-
-@[ext] lemma ext {N₁ N₂ : G(k, M; R)} (h : (N₁ : Submodule R M) = N₂) : N₁ = N₂ := by
-  cases N₁; cases N₂; congr 1
 
 @[simp] lemma coe_mk (N : Submodule R M) {h₁ h₂ h₃} :
     (⟨N, h₁, h₂, h₃⟩ : G(k, M; R)).toSubmodule = N := rfl
@@ -345,10 +326,43 @@ noncomputable def chartEquivEq : chart R x ≃ {f : left R M k // compose R x f 
     ofSurjective_mem_chart _ _ fun i ↦ by simpa using congr($(f.2) (Pi.single i 1))⟩
   left_inv N := by ext; simp
   right_inv f := Subtype.ext <| LinearMap.ext fun p ↦ (LinearEquiv.symm_apply_eq _).2 <|
-      (LinearMap.quotKerEquivOfSurjective _ (surjective_of_compose_eq_const1 f.2)).injective <| by
-        simpa using congr($(f.2.symm) (f.1 p))
+    (LinearMap.quotKerEquivOfSurjective _ (surjective_of_compose_eq_const1 f.2)).injective <| by
+      simpa using congr($(f.2.symm) (f.1 p))
 
--- variable (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (k : ℕ)
+variable {R M k} (A) in
+/-- Base change of `left` from `R` to `A`. -/
+def leftBaseChange (f : left R M k) : left A (A ⊗[R] M) k :=
+  TensorProduct.piScalarRightHom R A A (Fin k) ∘ₗ f.baseChange A
+
+/-- Base change of `left` from `A` to `B`. -/
+def leftMap (φ : A →ₐ[R] B) (f : left A (A ⊗[R] M) k) : left B (B ⊗[R] M) k :=
+  letI := φ.toAlgebra
+  leftBaseChange B f ∘ₗ (AlgebraTensorModule.cancelBaseChange R A B B M).symm
+
+variable {R M k} in
+@[simp] lemma leftMap_tmul (φ : A →ₐ[R] B) (f : left A (A ⊗[R] M) k) (a : A) (m : M) (i : Fin k) :
+    leftMap R M k φ f (φ a ⊗ₜ m) i = φ (f (a ⊗ₜ m) i) := by
+  letI := φ.toAlgebra
+  simp [leftMap, leftBaseChange, tmul_eq_smul_one_tmul a m, ← algebraMap_smul B, mul_comm,
+    show algebraMap A B = φ from rfl]
+
+@[simp] lemma leftMap_one_tmul {φ : A →ₐ[R] B} {f : left A (A ⊗[R] M) k} (m : M) (i : Fin k) :
+    leftMap R M k φ f (1 ⊗ₜ m) i = φ (f (1 ⊗ₜ m) i) := by
+  simpa only [map_one] using leftMap_tmul φ f 1 m i
+
+@[simp] lemma leftMap_id : leftMap R M k (AlgHom.id R A) = id := by
+  ext; simp
+
+@[simp] lemma leftMap_comp (φ : A →ₐ[R] B) (ψ : B →ₐ[R] C) :
+    leftMap R M k (ψ.comp φ) = leftMap R M k ψ ∘ leftMap R M k φ := by
+  ext; simp
+
+variable (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (k : ℕ) (x : Fin k → M)
+
+/-- `left` as a functor. -/
+def leftFunctor : Under R ⥤ Type (max u v) where
+  obj A := left A (A ⊗[R] M) k
+  map f := leftMap R M k (CommRingCat.toAlgHom f)
 
 end Corepresentable
 
