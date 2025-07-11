@@ -1,1 +1,0 @@
-{"name":"Mathlib.Tactic.Bound.Init","instances":[],"imports":["Init","Mathlib.Init","Aesop.Frontend.Command"],"declarations":[]}

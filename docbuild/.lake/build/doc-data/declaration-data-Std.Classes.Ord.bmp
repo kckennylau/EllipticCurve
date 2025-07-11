@@ -1,1 +1,0 @@
-{"name":"Std.Classes.Ord","instances":[],"imports":["Std.Classes.Ord.Basic","Std.Classes.Ord.SInt","Std.Classes.Ord.UInt","Std.Classes.Ord.String","Std.Classes.Ord.BitVec","Std.Classes.Ord.Vector"],"declarations":[]}

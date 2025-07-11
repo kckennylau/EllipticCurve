@@ -1,1 +1,0 @@
-{"name":"Std.Time.Internal","instances":[],"imports":["Std.Time.Internal.Bounded","Std.Time.Internal.UnitVal"],"declarations":[]}
