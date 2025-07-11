@@ -5,6 +5,8 @@ Towards a general definition of elliptic curve over schemes.
 The eventual goal is to put everything here into
 [Mathlib](https://github.com/leanprover-community/mathlib4).
 
+The biggest finished goal for now is [`EllipticCurve.Ring.model`](https://kckennylau.github.io/EllipticCurve-docs/EllipticCurve/Ring/Model.html#EllipticCurve.Ring.model), which is a functor from R-Alg to Type given commutative ring R and an R-module M.
+
 ## File Organisation
 
 The files are organised into folders:
