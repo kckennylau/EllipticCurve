@@ -1,0 +1,329 @@
+<html lang="en"><head><meta charset="UTF-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1"></meta><link rel="stylesheet" href="../../.././style.css"></link><link rel="icon" href="../../.././favicon.svg"></link><link rel="mask-icon" href="../../.././favicon.svg" color="#000000"></link><link rel="prefetch" href="../../.././/declarations/declaration-data.bmp" as="image"></link><title>Mathlib.Algebra.MonoidAlgebra.MapDomain</title><script defer="true" src="../../.././mathjax-config.js"></script><script defer="true" src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="true" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>const SITE_ROOT="../../.././";</script><script>const MODULE_NAME="Mathlib.Algebra.MonoidAlgebra.MapDomain";</script><script type="module" src="../../.././jump-src.js"></script><script type="module" src="../../.././search.js"></script><script type="module" src="../../.././expand-nav.js"></script><script type="module" src="../../.././how-about.js"></script><script type="module" src="../../.././instances.js"></script><script type="module" src="../../.././importedBy.js"></script></head><body><input id="nav_toggle" type="checkbox"></input><header><h1><label for="nav_toggle"></label><span>Documentation</span></h1><h2 class="header_filename break_within"><span class="name">Mathlib</span>.<span class="name">Algebra</span>.<span class="name">MonoidAlgebra</span>.<span class="name">MapDomain</span></h2><form id="search_form"><input type="text" name="q" autocomplete="off"></input>&#32;<button id="search_button" onclick="javascript: form.action='../../.././search.html';">Search</button></form></header><nav class="internal_nav"><p><a href="#top">return to top</a></p><p class="gh_nav_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean">source</a></p><div class="imports"><details><summary>Imports</summary><ul><li><a href="../../.././Init.html">Init</a></li><li><a href="../../.././Mathlib/Algebra/Module/BigOperators.html">Mathlib.Algebra.Module.BigOperators</a></li><li><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html">Mathlib.Algebra.MonoidAlgebra.Defs</a></li><li><a href="../../.././Mathlib/Data/Finsupp/SMul.html">Mathlib.Data.Finsupp.SMul</a></li><li><a href="../../.././Mathlib/LinearAlgebra/Finsupp/LSum.html">Mathlib.LinearAlgebra.Finsupp.LSum</a></li><li><a href="../../.././Mathlib/Algebra/Module/Submodule/Basic.html">Mathlib.Algebra.Module.Submodule.Basic</a></li></ul></details><details><summary>Imported by</summary><ul id="imported-by-Mathlib.Algebra.MonoidAlgebra.MapDomain" class="imported-by-list"></ul></details></div><div class="nav_link"><a class="break_within" href="#MonoidAlgebra.mapDomain"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain</span></a></div><div class="nav_link"><a class="break_within" href="#MonoidAlgebra.mapDomain_sum"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain_sum</span></a></div><div class="nav_link"><a class="break_within" href="#MonoidAlgebra.mapDomain_single"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain_single</span></a></div><div class="nav_link"><a class="break_within" href="#MonoidAlgebra.mapDomain_injective"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain_injective</span></a></div><div class="nav_link"><a class="break_within" href="#MonoidAlgebra.mapDomain_one"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain_one</span></a></div><div class="nav_link"><a class="break_within" href="#MonoidAlgebra.mapDomain_mul"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain_mul</span></a></div><div class="nav_link"><a class="break_within" href="#MonoidAlgebra.mapDomainRingHom"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomainRingHom</span></a></div><div class="nav_link"><a class="break_within" href="#MonoidAlgebra.mapDomainRingHom_apply"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomainRingHom_apply</span></a></div><div class="nav_link"><a class="break_within" href="#AddMonoidAlgebra.mapDomain"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain</span></a></div><div class="nav_link"><a class="break_within" href="#AddMonoidAlgebra.mapDomain_sum"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain_sum</span></a></div><div class="nav_link"><a class="break_within" href="#AddMonoidAlgebra.mapDomain_single"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain_single</span></a></div><div class="nav_link"><a class="break_within" href="#AddMonoidAlgebra.mapDomain_injective"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain_injective</span></a></div><div class="nav_link"><a class="break_within" href="#AddMonoidAlgebra.mapDomain_one"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain_one</span></a></div><div class="nav_link"><a class="break_within" href="#AddMonoidAlgebra.mapDomain_mul"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain_mul</span></a></div><div class="nav_link"><a class="break_within" href="#AddMonoidAlgebra.mapDomainRingHom"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomainRingHom</span></a></div><div class="nav_link"><a class="break_within" href="#AddMonoidAlgebra.mapDomainRingHom_apply"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomainRingHom_apply</span></a></div><div class="nav_link"><a class="break_within" href="#AddMonoidAlgebra.toMultiplicative"><span class="name">AddMonoidAlgebra</span>.<span class="name">toMultiplicative</span></a></div><div class="nav_link"><a class="break_within" href="#MonoidAlgebra.toAdditive"><span class="name">MonoidAlgebra</span>.<span class="name">toAdditive</span></a></div></nav><main>
+<div class="mod_doc"><h1 class="markdown-heading" id="MonoidAlgebra-mapDomain">MonoidAlgebra.mapDomain <a class="hover-link" href="#MonoidAlgebra-mapDomain">#</a></h1></div><div class="mod_doc"><h3 class="markdown-heading" id="Multiplicative-monoids">Multiplicative monoids <a class="hover-link" href="#Multiplicative-monoids">#</a></h3></div><div class="decl" id="MonoidAlgebra.mapDomain"><div class="def"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L33-L33">source</a></div><div class="attributes">@[reducible, inline]</div>
+<div class="decl_header"><span class="decl_kind">abbrev</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">R</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">M</span> : <a href="../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">N</span> : <a href="../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">R</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn"><span class="fn">M</span> → <span class="fn">N</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">v</span> : <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a> <span class="fn">R</span> <span class="fn">M</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a> <span class="fn">R</span> <span class="fn">N</span></span></div></div><details><summary>Equations</summary><ul class="equations"><li class="equation"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain">MonoidAlgebra.mapDomain</a> <span class="fn">f</span> <span class="fn">v</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain">Finsupp.mapDomain</a> <span class="fn">f</span> <span class="fn">v</span></span></li></ul></details><details id="instances-for-list-MonoidAlgebra.mapDomain" class="instances-for-list"><summary>Instances For</summary><ul class="instances-for-enum"></ul></details></div></div><div class="decl" id="MonoidAlgebra.mapDomain_sum"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L35-L36">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain_sum"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain_sum</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">R</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">S</span> : <a href="../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">M</span> : <a href="../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">N</span> : <a href="../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">R</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">S</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn"><span class="fn">M</span> → <span class="fn">N</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">s</span> : <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a> <span class="fn">S</span> <span class="fn">M</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">v</span> : <span class="fn"><span class="fn">M</span> → <span class="fn"><span class="fn">S</span> → <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a> <span class="fn">R</span> <span class="fn">M</span></span></span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">f</span> <span class="fn">(<a href="../../.././Mathlib/Algebra/BigOperators/Finsupp/Basic.html#Finsupp.sum">Finsupp.sum</a> <span class="fn">s</span> <span class="fn">v</span>)</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../../.././Mathlib/Algebra/BigOperators/Finsupp/Basic.html#Finsupp.sum">Finsupp.sum</a> <span class="fn">s</span> <span class="fn">fun (<span class="fn">a</span> : <span class="fn">M</span>) (<span class="fn">b</span> : <span class="fn">S</span>) =&gt; <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">f</span> <span class="fn">(<span class="fn">v</span> <span class="fn">a</span> <span class="fn">b</span>)</span></span></span></span></div></div></div></div><div class="decl" id="MonoidAlgebra.mapDomain_single"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L38-L38">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain_single"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain_single</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">R</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">M</span> : <a href="../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">N</span> : <a href="../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">R</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">f</span> : <span class="fn"><span class="fn">M</span> → <span class="fn">N</span></span>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">a</span> : <span class="fn">M</span>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">r</span> : <span class="fn">R</span>}</span></span>
+</span><span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">f</span> <span class="fn">(<a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra.single">single</a> <span class="fn">a</span> <span class="fn">r</span>)</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra.single">single</a> <span class="fn">(<span class="fn">f</span> <span class="fn">a</span>)</span> <span class="fn">r</span></span></div></div></div></div><div class="decl" id="MonoidAlgebra.mapDomain_injective"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L40-L41">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain_injective"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain_injective</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">R</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">M</span> : <a href="../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">N</span> : <a href="../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">R</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">f</span> : <span class="fn"><span class="fn">M</span> → <span class="fn">N</span></span>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hf</span> : <span class="fn"><a href="../../.././Mathlib/Logic/Function/Defs.html#Function.Injective">Function.Injective</a> <span class="fn">f</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Logic/Function/Defs.html#Function.Injective">Function.Injective</a> <span class="fn">(<a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">f</span>)</span></span></div></div></div></div><div class="decl" id="MonoidAlgebra.mapDomain_one"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L52-L57">source</a></div><div class="attributes">@[simp]</div>
+<div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain_one"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain_one</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_8}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β</span> : <a href="../../.././foundational_types.html">Type</a> u_9}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α₂</span> : <a href="../../.././foundational_types.html">Type</a> u_10}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#One">One</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#One">One</a> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">F</span> : <a href="../../.././foundational_types.html">Type</a> u_11}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Data/FunLike/Basic.html#FunLike">FunLike</a> <span class="fn">F</span> <span class="fn">α</span> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#OneHomClass">OneHomClass</a> <span class="fn">F</span> <span class="fn">α</span> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn">F</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">(⇑<span class="fn">f</span>)</span> <span class="fn">1</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn">1</span></div></div><p>Like <code><a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain_zero">Finsupp.mapDomain_zero</a></code>, but for the <code>1</code> we define in this file</p></div></div><div class="decl" id="MonoidAlgebra.mapDomain_mul"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L59-L71">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain_mul"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomain_mul</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_8}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β</span> : <a href="../../.././foundational_types.html">Type</a> u_9}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α₂</span> : <a href="../../.././foundational_types.html">Type</a> u_10}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Mul">Mul</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Mul">Mul</a> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">F</span> : <a href="../../.././foundational_types.html">Type</a> u_11}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Data/FunLike/Basic.html#FunLike">FunLike</a> <span class="fn">F</span> <span class="fn">α</span> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#MulHomClass">MulHomClass</a> <span class="fn">F</span> <span class="fn">α</span> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn">F</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">x </span><span class="fn">y</span> : <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a> <span class="fn">β</span> <span class="fn">α</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">(⇑<span class="fn">f</span>)</span> (<span class="fn">x</span> <a href="../../.././Init/Prelude.html#HMul.hMul">*</a> <span class="fn">y</span>)</span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">(⇑<span class="fn">f</span>)</span> <span class="fn">x</span></span> <a href="../../.././Init/Prelude.html#HMul.hMul">*</a> <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">(⇑<span class="fn">f</span>)</span> <span class="fn">y</span></span></div></div><p>Like <code><a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain_add">Finsupp.mapDomain_add</a></code>, but for the convolutive multiplication we define in this file</p></div></div><div class="decl" id="MonoidAlgebra.mapDomainRingHom"><div class="def"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L77-L84">source</a></div><div class="decl_header"><span class="decl_kind">def</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomainRingHom"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomainRingHom</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">G</span> : <a href="../../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">k</span> : <a href="../../.././foundational_types.html">Type</a> u_8)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">H</span> : <a href="../../.././foundational_types.html">Type</a> u_9}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">F</span> : <a href="../../.././foundational_types.html">Type</a> u_10}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">k</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Defs.html#Monoid">Monoid</a> <span class="fn">G</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Defs.html#Monoid">Monoid</a> <span class="fn">H</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Data/FunLike/Basic.html#FunLike">FunLike</a> <span class="fn">F</span> <span class="fn">G</span> <span class="fn">H</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#MonoidHomClass">MonoidHomClass</a> <span class="fn">F</span> <span class="fn">G</span> <span class="fn">H</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn">F</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a> <span class="fn">k</span> <span class="fn">G</span></span> <a href="../../.././Mathlib/Algebra/Ring/Hom/Defs.html#RingHom">→+*</a> <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a> <span class="fn">k</span> <span class="fn">H</span></span></div></div><p>If <code>f : G → H</code> is a multiplicative homomorphism between two monoids, then
+<code><a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain">Finsupp.mapDomain</a> f</code> is a ring homomorphism between their monoid algebras.</p><details><summary>Equations</summary><ul class="equations"><li class="equation"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomainRingHom">MonoidAlgebra.mapDomainRingHom</a> <span class="fn">k</span> <span class="fn">f</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a>   <a href="../../.././Mathlib/Algebra/Ring/Hom/Defs.html#RingHom.mk">{</a> <span class="fn">toFun</span> := <span class="fn"><span class="fn">(↑<span class="fn">(<a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain.addMonoidHom">Finsupp.mapDomain.addMonoidHom</a> <span class="fn">⇑<span class="fn">f</span></span>)</span>)</span>.<a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#ZeroHom.toFun">toFun</a></span>, <span class="fn">map_one'</span> := <span class="fn">⋯</span>, <span class="fn">map_mul'</span> := <span class="fn">⋯</span>, <span class="fn">map_zero'</span> := <span class="fn">⋯</span>, <span class="fn">map_add'</span> := <span class="fn">⋯</span> <a href="../../.././Mathlib/Algebra/Ring/Hom/Defs.html#RingHom.mk">}</a></li></ul></details><details id="instances-for-list-MonoidAlgebra.mapDomainRingHom" class="instances-for-list"><summary>Instances For</summary><ul class="instances-for-enum"></ul></details></div></div><div class="decl" id="MonoidAlgebra.mapDomainRingHom_apply"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L79-L79">source</a></div><div class="attributes">@[simp]</div>
+<div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomainRingHom_apply"><span class="name">MonoidAlgebra</span>.<span class="name">mapDomainRingHom_apply</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">G</span> : <a href="../../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">k</span> : <a href="../../.././foundational_types.html">Type</a> u_8)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">H</span> : <a href="../../.././foundational_types.html">Type</a> u_9}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">F</span> : <a href="../../.././foundational_types.html">Type</a> u_10}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">k</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Defs.html#Monoid">Monoid</a> <span class="fn">G</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Defs.html#Monoid">Monoid</a> <span class="fn">H</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Data/FunLike/Basic.html#FunLike">FunLike</a> <span class="fn">F</span> <span class="fn">G</span> <span class="fn">H</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#MonoidHomClass">MonoidHomClass</a> <span class="fn">F</span> <span class="fn">G</span> <span class="fn">H</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn">F</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">a✝</span> : <span class="fn">G</span> <a href="../../.././Mathlib/Data/Finsupp/Defs.html#Finsupp">→₀</a> <span class="fn">k</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><span class="fn">(<a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.mapDomainRingHom">mapDomainRingHom</a> <span class="fn">k</span> <span class="fn">f</span>)</span> <span class="fn">a✝</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><span class="fn"><span class="fn">(↑<span class="fn">(<a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain.addMonoidHom">Finsupp.mapDomain.addMonoidHom</a> <span class="fn">⇑<span class="fn">f</span></span>)</span>)</span>.<a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#ZeroHom.toFun">toFun</a></span> <span class="fn">a✝</span></span></div></div></div></div><div class="mod_doc"><h3 class="markdown-heading" id="Additive-monoids">Additive monoids <a class="hover-link" href="#Additive-monoids">#</a></h3></div><div class="decl" id="AddMonoidAlgebra.mapDomain"><div class="def"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L95-L95">source</a></div><div class="attributes">@[reducible, inline]</div>
+<div class="decl_header"><span class="decl_kind">abbrev</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">R</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">M</span> : <a href="../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">N</span> : <a href="../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">R</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn"><span class="fn">M</span> → <span class="fn">N</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">v</span> : <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a> <span class="fn">R</span> <span class="fn">M</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a> <span class="fn">R</span> <span class="fn">N</span></span></div></div><details><summary>Equations</summary><ul class="equations"><li class="equation"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain">AddMonoidAlgebra.mapDomain</a> <span class="fn">f</span> <span class="fn">v</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain">Finsupp.mapDomain</a> <span class="fn">f</span> <span class="fn">v</span></span></li></ul></details><details id="instances-for-list-AddMonoidAlgebra.mapDomain" class="instances-for-list"><summary>Instances For</summary><ul class="instances-for-enum"></ul></details></div></div><div class="decl" id="AddMonoidAlgebra.mapDomain_sum"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L97-L98">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain_sum"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain_sum</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">R</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">S</span> : <a href="../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">M</span> : <a href="../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">N</span> : <a href="../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">R</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">S</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn"><span class="fn">M</span> → <span class="fn">N</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">s</span> : <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a> <span class="fn">S</span> <span class="fn">M</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">v</span> : <span class="fn"><span class="fn">M</span> → <span class="fn"><span class="fn">S</span> → <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a> <span class="fn">R</span> <span class="fn">M</span></span></span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">f</span> <span class="fn">(<a href="../../.././Mathlib/Algebra/BigOperators/Finsupp/Basic.html#Finsupp.sum">Finsupp.sum</a> <span class="fn">s</span> <span class="fn">v</span>)</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../../.././Mathlib/Algebra/BigOperators/Finsupp/Basic.html#Finsupp.sum">Finsupp.sum</a> <span class="fn">s</span> <span class="fn">fun (<span class="fn">a</span> : <span class="fn">M</span>) (<span class="fn">b</span> : <span class="fn">S</span>) =&gt; <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">f</span> <span class="fn">(<span class="fn">v</span> <span class="fn">a</span> <span class="fn">b</span>)</span></span></span></span></div></div></div></div><div class="decl" id="AddMonoidAlgebra.mapDomain_single"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L100-L100">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain_single"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain_single</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">R</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">M</span> : <a href="../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">N</span> : <a href="../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">R</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">f</span> : <span class="fn"><span class="fn">M</span> → <span class="fn">N</span></span>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">a</span> : <span class="fn">M</span>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">r</span> : <span class="fn">R</span>}</span></span>
+</span><span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">f</span> <span class="fn">(<a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra.single">single</a> <span class="fn">a</span> <span class="fn">r</span>)</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra.single">single</a> <span class="fn">(<span class="fn">f</span> <span class="fn">a</span>)</span> <span class="fn">r</span></span></div></div></div></div><div class="decl" id="AddMonoidAlgebra.mapDomain_injective"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L102-L103">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain_injective"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain_injective</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">R</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">M</span> : <a href="../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">N</span> : <a href="../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">R</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">f</span> : <span class="fn"><span class="fn">M</span> → <span class="fn">N</span></span>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hf</span> : <span class="fn"><a href="../../.././Mathlib/Logic/Function/Defs.html#Function.Injective">Function.Injective</a> <span class="fn">f</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Logic/Function/Defs.html#Function.Injective">Function.Injective</a> <span class="fn">(<a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">f</span>)</span></span></div></div></div></div><div class="decl" id="AddMonoidAlgebra.mapDomain_one"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L111-L117">source</a></div><div class="attributes">@[simp]</div>
+<div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain_one"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain_one</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_8}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β</span> : <a href="../../.././foundational_types.html">Type</a> u_9}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α₂</span> : <a href="../../.././foundational_types.html">Type</a> u_10}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Zero">Zero</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Zero">Zero</a> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">F</span> : <a href="../../.././foundational_types.html">Type</a> u_11}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Data/FunLike/Basic.html#FunLike">FunLike</a> <span class="fn">F</span> <span class="fn">α</span> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#ZeroHomClass">ZeroHomClass</a> <span class="fn">F</span> <span class="fn">α</span> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn">F</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">(⇑<span class="fn">f</span>)</span> <span class="fn">1</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn">1</span></div></div><p>Like <code><a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain_zero">Finsupp.mapDomain_zero</a></code>, but for the <code>1</code> we define in this file</p></div></div><div class="decl" id="AddMonoidAlgebra.mapDomain_mul"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L119-L131">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain_mul"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomain_mul</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_8}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β</span> : <a href="../../.././foundational_types.html">Type</a> u_9}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α₂</span> : <a href="../../.././foundational_types.html">Type</a> u_10}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Add">Add</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Add">Add</a> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">F</span> : <a href="../../.././foundational_types.html">Type</a> u_11}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Data/FunLike/Basic.html#FunLike">FunLike</a> <span class="fn">F</span> <span class="fn">α</span> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#AddHomClass">AddHomClass</a> <span class="fn">F</span> <span class="fn">α</span> <span class="fn">α₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn">F</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">x </span><span class="fn">y</span> : <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a> <span class="fn">β</span> <span class="fn">α</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">(⇑<span class="fn">f</span>)</span> (<span class="fn">x</span> <a href="../../.././Init/Prelude.html#HMul.hMul">*</a> <span class="fn">y</span>)</span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">(⇑<span class="fn">f</span>)</span> <span class="fn">x</span></span> <a href="../../.././Init/Prelude.html#HMul.hMul">*</a> <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomain">mapDomain</a> <span class="fn">(⇑<span class="fn">f</span>)</span> <span class="fn">y</span></span></div></div><p>Like <code><a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain_add">Finsupp.mapDomain_add</a></code>, but for the convolutive multiplication we define in this file</p></div></div><div class="decl" id="AddMonoidAlgebra.mapDomainRingHom"><div class="def"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L133-L140">source</a></div><div class="decl_header"><span class="decl_kind">def</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomainRingHom"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomainRingHom</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">G</span> : <a href="../../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">k</span> : <a href="../../.././foundational_types.html">Type</a> u_8)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">k</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">H</span> : <a href="../../.././foundational_types.html">Type</a> u_9}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">F</span> : <a href="../../.././foundational_types.html">Type</a> u_10}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Defs.html#AddMonoid">AddMonoid</a> <span class="fn">G</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Defs.html#AddMonoid">AddMonoid</a> <span class="fn">H</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Data/FunLike/Basic.html#FunLike">FunLike</a> <span class="fn">F</span> <span class="fn">G</span> <span class="fn">H</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#AddMonoidHomClass">AddMonoidHomClass</a> <span class="fn">F</span> <span class="fn">G</span> <span class="fn">H</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn">F</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a> <span class="fn">k</span> <span class="fn">G</span></span> <a href="../../.././Mathlib/Algebra/Ring/Hom/Defs.html#RingHom">→+*</a> <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a> <span class="fn">k</span> <span class="fn">H</span></span></div></div><p>If <code>f : G → H</code> is an additive homomorphism between two additive monoids, then
+<code><a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain">Finsupp.mapDomain</a> f</code> is a ring homomorphism between their add monoid algebras.</p><details><summary>Equations</summary><ul class="equations"><li class="equation"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomainRingHom">AddMonoidAlgebra.mapDomainRingHom</a> <span class="fn">k</span> <span class="fn">f</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a>   <a href="../../.././Mathlib/Algebra/Ring/Hom/Defs.html#RingHom.mk">{</a> <span class="fn">toFun</span> := <span class="fn"><span class="fn">(↑<span class="fn">(<a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain.addMonoidHom">Finsupp.mapDomain.addMonoidHom</a> <span class="fn">⇑<span class="fn">f</span></span>)</span>)</span>.<a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#ZeroHom.toFun">toFun</a></span>, <span class="fn">map_one'</span> := <span class="fn">⋯</span>, <span class="fn">map_mul'</span> := <span class="fn">⋯</span>, <span class="fn">map_zero'</span> := <span class="fn">⋯</span>, <span class="fn">map_add'</span> := <span class="fn">⋯</span> <a href="../../.././Mathlib/Algebra/Ring/Hom/Defs.html#RingHom.mk">}</a></li></ul></details><details id="instances-for-list-AddMonoidAlgebra.mapDomainRingHom" class="instances-for-list"><summary>Instances For</summary><ul class="instances-for-enum"></ul></details></div></div><div class="decl" id="AddMonoidAlgebra.mapDomainRingHom_apply"><div class="theorem"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L135-L135">source</a></div><div class="attributes">@[simp]</div>
+<div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomainRingHom_apply"><span class="name">AddMonoidAlgebra</span>.<span class="name">mapDomainRingHom_apply</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">G</span> : <a href="../../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">k</span> : <a href="../../.././foundational_types.html">Type</a> u_8)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">k</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">H</span> : <a href="../../.././foundational_types.html">Type</a> u_9}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">F</span> : <a href="../../.././foundational_types.html">Type</a> u_10}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Defs.html#AddMonoid">AddMonoid</a> <span class="fn">G</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Defs.html#AddMonoid">AddMonoid</a> <span class="fn">H</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Data/FunLike/Basic.html#FunLike">FunLike</a> <span class="fn">F</span> <span class="fn">G</span> <span class="fn">H</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#AddMonoidHomClass">AddMonoidHomClass</a> <span class="fn">F</span> <span class="fn">G</span> <span class="fn">H</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn">F</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">a✝</span> : <span class="fn">G</span> <a href="../../.././Mathlib/Data/Finsupp/Defs.html#Finsupp">→₀</a> <span class="fn">k</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><span class="fn">(<a href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.mapDomainRingHom">mapDomainRingHom</a> <span class="fn">k</span> <span class="fn">f</span>)</span> <span class="fn">a✝</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><span class="fn"><span class="fn">(↑<span class="fn">(<a href="../../.././Mathlib/Data/Finsupp/Basic.html#Finsupp.mapDomain.addMonoidHom">Finsupp.mapDomain.addMonoidHom</a> <span class="fn">⇑<span class="fn">f</span></span>)</span>)</span>.<a href="../../.././Mathlib/Algebra/Group/Hom/Defs.html#ZeroHom.toFun">toFun</a></span> <span class="fn">a✝</span></span></div></div></div></div><div class="mod_doc"><h4 class="markdown-heading" id="Conversions-between-AddMonoidAlgebra-and-MonoidAlgebra">Conversions between <code><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a></code> and <code><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a></code> <a class="hover-link" href="#Conversions-between-AddMonoidAlgebra-and-MonoidAlgebra">#</a></h4><p>We have not defined <code>k[G] = <a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a> k (Multiplicative G)</code>
+because historically this caused problems;
+since the changes that have made <code>nsmul</code> definitional, this would be possible,
+but for now we just construct the ring isomorphisms using <code><a href="../../.././Mathlib/Algebra/Ring/Equiv.html#RingEquiv.refl">RingEquiv.refl</a> _</code>.</p></div><div class="decl" id="AddMonoidAlgebra.toMultiplicative"><div class="def"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L156-L167">source</a></div><div class="decl_header"><span class="decl_kind">def</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#AddMonoidAlgebra.toMultiplicative"><span class="name">AddMonoidAlgebra</span>.<span class="name">toMultiplicative</span></a></span><span class="decl_args">
+<span class="fn">(<span class="fn">k</span> : <a href="../../.././foundational_types.html">Type</a> u_1)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">G</span> : <a href="../../.././foundational_types.html">Type</a> u_4)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">k</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Add">Add</a> <span class="fn">G</span></span>]</span></span>
+</span><span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a> <span class="fn">k</span> <span class="fn">G</span></span> <a href="../../.././Mathlib/Algebra/Ring/Equiv.html#RingEquiv">≃+*</a> <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a> <span class="fn">k</span> <span class="fn">(<a href="../../.././Mathlib/Algebra/Group/TypeTags/Basic.html#Multiplicative">Multiplicative</a> <span class="fn">G</span>)</span></span></div></div><p>The equivalence between <code><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a></code> and <code><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a></code> in terms of
+<code><a href="../../.././Mathlib/Algebra/Group/TypeTags/Basic.html#Multiplicative">Multiplicative</a></code></p><details><summary>Equations</summary><ul class="equations"><li class="equation">One or more equations did not get rendered due to their size.</li></ul></details><details id="instances-for-list-AddMonoidAlgebra.toMultiplicative" class="instances-for-list"><summary>Instances For</summary><ul class="instances-for-enum"></ul></details></div></div><div class="decl" id="MonoidAlgebra.toAdditive"><div class="def"><div class="gh_link"><a href="https://github.com/leanprover-community/mathlib4/blob/80ef7ee04d6e4d69bb5ec32dc5fc93ed19cd1fbc/Mathlib/Algebra/MonoidAlgebra/MapDomain.lean#L170-L178">source</a></div><div class="decl_header"><span class="decl_kind">def</span>
+<span class="decl_name"><a class="break_within" href="../../.././Mathlib/Algebra/MonoidAlgebra/MapDomain.html#MonoidAlgebra.toAdditive"><span class="name">MonoidAlgebra</span>.<span class="name">toAdditive</span></a></span><span class="decl_args">
+<span class="fn">(<span class="fn">k</span> : <a href="../../.././foundational_types.html">Type</a> u_1)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">G</span> : <a href="../../.././foundational_types.html">Type</a> u_4)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Algebra/Ring/Defs.html#Semiring">Semiring</a> <span class="fn">k</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Mul">Mul</a> <span class="fn">G</span></span>]</span></span>
+</span><span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a> <span class="fn">k</span> <span class="fn">G</span></span> <a href="../../.././Mathlib/Algebra/Ring/Equiv.html#RingEquiv">≃+*</a> <span class="fn"><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a> <span class="fn">k</span> <span class="fn">(<a href="../../.././Mathlib/Algebra/Group/TypeTags/Basic.html#Additive">Additive</a> <span class="fn">G</span>)</span></span></div></div><p>The equivalence between <code><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#MonoidAlgebra">MonoidAlgebra</a></code> and <code><a href="../../.././Mathlib/Algebra/MonoidAlgebra/Defs.html#AddMonoidAlgebra">AddMonoidAlgebra</a></code> in terms of <code><a href="../../.././Mathlib/Algebra/Group/TypeTags/Basic.html#Additive">Additive</a></code></p><details><summary>Equations</summary><ul class="equations"><li class="equation">One or more equations did not get rendered due to their size.</li></ul></details><details id="instances-for-list-MonoidAlgebra.toAdditive" class="instances-for-list"><summary>Instances For</summary><ul class="instances-for-enum"></ul></details></div></div></main>
+<nav class="nav"><iframe src="../../.././navbar.html" class="navframe" frameBorder="0"></iframe></nav></body></html>

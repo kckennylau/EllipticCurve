@@ -1,0 +1,1 @@
+{"name":"LeanSearchClient","instances":[],"imports":["Init","LeanSearchClient.Basic","LeanSearchClient.Syntax","LeanSearchClient.LoogleSyntax"],"declarations":[]}

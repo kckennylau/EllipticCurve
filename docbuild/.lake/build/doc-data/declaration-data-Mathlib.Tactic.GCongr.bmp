@@ -1,0 +1,1 @@
+{"name":"Mathlib.Tactic.GCongr","instances":[],"imports":["Init","Mathlib.Tactic.GCongr.CoreAttrs","Mathlib.Tactic.Hint"],"declarations":[]}
