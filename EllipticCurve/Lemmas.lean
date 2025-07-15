@@ -4,11 +4,13 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau
 -/
 
+import Mathlib.Algebra.Category.Ring.Under.Basic
 import Mathlib.Data.Fin.Tuple.Basic
 import Mathlib.GroupTheory.Congruence.Hom
 import Mathlib.LinearAlgebra.Isomorphisms
 import Mathlib.LinearAlgebra.Multilinear.Basis
 import Mathlib.LinearAlgebra.Quotient.Basic
+import Mathlib.LinearAlgebra.SymmetricAlgebra.Basic
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.Logic.Equiv.Fin.Basic
@@ -283,3 +285,51 @@ theorem SMulCommClass.isScalarTower (R₁ : Type u) (R : Type v) [Monoid R₁]
     [ZeroHomClass F α β] [OneHomClass F α β] (i j : ι) (f : F) :
     f (Pi.single (M := fun _ ↦ α) i 1 j) = Pi.single (M := fun _ ↦ β) i 1 j :=
   Pi.map_single_one (α := fun _ ↦ α) (β := fun _ ↦ β) i j f
+
+
+@[simps] def LinearMap.piEquiv
+    (R M : Type*) {ι : Type*} [Semiring R] [AddCommMonoid M] [Module R M]
+    (φ : ι → Type*) [∀ i, AddCommMonoid (φ i)] [∀ i, Module R (φ i)] :
+    ((i : ι) → (M →ₗ[R] φ i)) ≃ (M →ₗ[R] ((i : ι) → φ i)) where
+  toFun := LinearMap.pi
+  invFun f i := LinearMap.proj i ∘ₗ f
+
+@[simps] def LinearMap.piLEquiv
+    (R M : Type*) {ι : Type*} [Semiring R] [AddCommMonoid M] [Module R M]
+    (φ : ι → Type*) [∀ i, AddCommMonoid (φ i)] [∀ i, Module R (φ i)]
+    (S : Type*) [Semiring S] [∀ i, Module S (φ i)] [∀ i, SMulCommClass R S (φ i)] :
+    ((i : ι) → (M →ₗ[R] φ i)) ≃ₗ[S] (M →ₗ[R] ((i : ι) → φ i)) where
+  __ := LinearMap.piEquiv R M φ
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+
+@[simp] lemma _root_.SymmetricAlgebra.lift_symm_apply {R M A : Type*} [CommRing R]
+    [AddCommMonoid M] [Module R M] [CommRing A] [Algebra R A]
+    (f : SymmetricAlgebra R M →ₐ[R] A) :
+    SymmetricAlgebra.lift.symm f = f ∘ₗ SymmetricAlgebra.ι R M :=
+  (Equiv.symm_apply_eq _).2 <| SymmetricAlgebra.algHom_ext <| (SymmetricAlgebra.lift_comp_ι _).symm
+
+@[simp] lemma _root_.LinearEquiv.congrLeft_apply {R M₁ M₂ N : Type*} [Semiring R]
+    [AddCommMonoid M₁] [Module R M₁] [AddCommMonoid M₂] [Module R M₂] [AddCommMonoid N] [Module R N]
+    {S : Type*} [Semiring S] [Module S N] [SMulCommClass R S N]
+    (e : M₁ ≃ₗ[R] M₂) (f : M₁ →ₗ[R] N) :
+    LinearEquiv.congrLeft N S e f = f ∘ₗ e.symm := rfl
+
+open CategoryTheory
+
+def _root_.CommRingCat.mkUnderToAlgHom (R : CommRingCat.{u})
+    (A : Type u) [CommRing A] [Algebra R A] (B : Under R)
+    (f : R.mkUnder A ⟶ B) : (A →ₐ[R] B) where
+  __ := f.right.hom
+  commutes' r := congr(CommRingCat.Hom.hom $f.w.symm r)
+
+def _root_.CommRingCat.homMkUnderEquiv (R : CommRingCat.{u})
+    (A : Type u) [CommRing A] [Algebra R A] (B : Under R) :
+    (R.mkUnder A ⟶ B) ≃ (A →ₐ[R] B) where
+  toFun := CommRingCat.mkUnderToAlgHom R A B
+  invFun f := f.toUnder
+
+@[simp] lemma _root_.CommRingCat.homMkUnderEquiv_apply_apply (R : CommRingCat.{u})
+    (A : Type u) [CommRing A] [Algebra R A] (B : Under R)
+    (f : R.mkUnder A ⟶ B) (x : A) :
+    CommRingCat.homMkUnderEquiv R A B f x = f.right x := rfl

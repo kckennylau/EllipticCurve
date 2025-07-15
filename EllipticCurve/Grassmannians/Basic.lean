@@ -8,6 +8,7 @@ import EllipticCurve.Lemmas
 import Mathlib.Algebra.Category.Ring.Under.Basic
 import Mathlib.CategoryTheory.Comma.Over.Basic
 import Mathlib.CategoryTheory.Limits.Types.Shapes
+import Mathlib.LinearAlgebra.SymmetricAlgebra.Basic
 import Mathlib.LinearAlgebra.TensorProduct.Quotient
 import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.RingTheory.Spectrum.Prime.FreeLocus
@@ -405,6 +406,8 @@ We show that `chart x` is the equalizer of `Hom[R](M, R^k) ⥤ Hom[R](R^k, R^k)`
 We call `Hom[R](M, R^k)` "left" and `Hom[R](R^k, R^k)` "right".
 -/
 
+section CommRing
+
 variable (R M k) (x : Fin k → M)
 
 /-- The first module in the equaliser diagram. -/
@@ -417,7 +420,7 @@ abbrev Right : Type u :=
 
 variable {R k} in
 @[ext] lemma Right.ext {f g : Right R k} (h : ∀ i, f (Pi.single i 1) = g (Pi.single i 1)) : f = g :=
-  LinearMap.pi_ext' fun i ↦ by ext; simp [h]
+  LinearMap.pi_ext' fun i ↦ LinearMap.ext_ring <| h i
 
 variable {M k} in
 /-- The first map `Left ⟶ right`. -/
@@ -517,16 +520,54 @@ lemma toLeft_map_naturality (φ : A →ₐ[R] B) (p : chart A (newChart R A x)) 
       leftMap R M k φ (toLeft A (newChart R A x) p) := by
   ext; simp
 
+variable (M k A)
+
+/-- We show that `Left` is corepresented by `Sym[R](Mᵏ)`. -/
+noncomputable
+def corepresentLeft : (SymmetricAlgebra R (Fin k → M) →ₐ[R] A) ≃ Left A (A ⊗[R] M) k := calc
+  (SymmetricAlgebra R (Fin k → M) →ₐ[R] A)
+    ≃ ((Fin k → M) →ₗ[R] A) := SymmetricAlgebra.lift.symm
+  _ ≃ (Fin k → (M →ₗ[R] A)) := (LinearMap.lsum R (fun _ ↦ M) R).symm.toEquiv
+  _ ≃ (M →ₗ[R] (Fin k → A)) := LinearMap.piEquiv _ _ _
+  _ ≃ ((A ⊗[R] M) →ₗ[A] (Fin k → A)) := (LinearMap.liftBaseChangeEquiv A).toEquiv
+
+/-- `Right A k` is actually isomorphic to `Left A (A ⊗[R] (Fin k → R)) k`. -/
+def lequivLeftRight : Left A (A ⊗[R] (Fin k → R)) k ≃ₗ[A] Right A k :=
+  LinearEquiv.congrLeft _ _ (TensorProduct.piScalarRight R A A (Fin k))
+
+/-- We show that `Right` is corepresented by `Sym[R](R^(Fin k × Fin k))`. -/
+noncomputable
+def corepresentRight : (SymmetricAlgebra R (Fin k → Fin k → R) →ₐ[R] A) ≃ Right A k := calc
+  (SymmetricAlgebra R (Fin k → Fin k → R) →ₐ[R] A)
+    ≃ Left A (A ⊗[R] (Fin k → R)) k := corepresentLeft R (Fin k → R) k A
+  _ ≃ Right A k := (lequivLeftRight R k A).toEquiv
+
+@[simp] lemma corepresentLeft_apply (f : SymmetricAlgebra R (Fin k → M) →ₐ[R] A)
+    (m : M) (i : Fin k) :
+    corepresentLeft R M k A f (1 ⊗ₜ m) i = f (SymmetricAlgebra.ι R _ (Pi.single i m)) := by
+  simp [corepresentLeft]
+
+@[simp] lemma corepresentRight_apply (f : SymmetricAlgebra R (Fin k → Fin k → R) →ₐ[R] A)
+    (i j : Fin k) :
+    corepresentRight R k A f (Pi.single i 1) j =
+      f (SymmetricAlgebra.ι R _ <| Pi.single j (Pi.single i 1)) := by
+  simp [corepresentRight, lequivLeftRight]
+
+end CommRing
+
+
+section Category
+
 -- I ain't dealing with no universe issues.
 variable (R : CommRingCat.{u}) (M : ModuleCat.{u} R) (k : ℕ) (x : Fin k → M)
 
-/-- `Left` as a functor. -/
-@[simps] def leftFunctor : Under R ⥤ Type u where
+/-- `Left` as a functor, sends `A` to `A ⊗[R] M →ₗ[A] Aᵏ`. -/
+@[simps] abbrev leftFunctor : Under R ⥤ Type u where
   obj A := Left A (A ⊗[R] M) k
   map φ := leftMap R M k (CommRingCat.toAlgHom φ)
 
-/-- `Right` as a functor. -/
-@[simps] def rightFunctor : Under R ⥤ Type u where
+/-- `Right` as a functor, sends `A` to `Aᵏ →ₗ[A] Aᵏ`. -/
+@[simps] abbrev rightFunctor : Under R ⥤ Type u where
   obj A := Right A k
   map φ := rightMap R k (CommRingCat.toAlgHom φ)
 
@@ -534,7 +575,7 @@ variable {M k} in
 /-- `compose` as a natural transformation. -/
 def composeNat : leftFunctor R M k ⟶ rightFunctor R k where
   app A := compose A (newChart R A x)
-  naturality A B φ := by simp only [rightFunctor_obj]; ext; simp [newChart]
+  naturality A B φ := by ext; simp [newChart]
 
 /-- `const1` as a natural transformation. -/
 def const1Nat : leftFunctor R M k ⟶ rightFunctor R k where
@@ -579,8 +620,23 @@ noncomputable def isLimitEvaluationFork (A : Under R) :
   IsLimit.postcomposeHomEquiv _ _ <| IsLimit.equivIsoLimit (evaluationForkIso R x A).symm
     Types.equalizerLimit.isLimit
 
+/-- `fork` is an equaliser. -/
 noncomputable def isLimitFork : IsLimit (fork R x) :=
   evaluationJointlyReflectsLimits _ fun A ↦ isLimitEvaluationFork R x A
+
+/-- `left` is corepresentable by `Sym[R](Mᵏ)`. -/
+noncomputable def CorepresentableBy.left : Functor.CorepresentableBy (leftFunctor R M k)
+    (R.mkUnder <| SymmetricAlgebra R (Fin k → M)) where
+  homEquiv {A} := (CommRingCat.homMkUnderEquiv _ _ _).trans (corepresentLeft R M k A)
+  homEquiv_comp φ f := by ext m i; simp
+
+/-- `right` is corepresentable by `Sym[R](R^(Fin k × Fin k))`. -/
+noncomputable def CorepresentableBy.right : Functor.CorepresentableBy (rightFunctor R k)
+    (R.mkUnder <| SymmetricAlgebra R (Fin k → Fin k → R)) where
+  homEquiv {A} := (CommRingCat.homMkUnderEquiv _ _ _).trans (corepresentRight R k A)
+  homEquiv_comp φ f := by ext m i; simp
+
+end Category
 
 end Corepresentable
 
