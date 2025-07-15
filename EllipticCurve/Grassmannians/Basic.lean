@@ -4,10 +4,13 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau
 -/
 
+import EllipticCurve.Grassmannians.EqualizerCorepresentable
 import EllipticCurve.Lemmas
 import Mathlib.Algebra.Category.Ring.Under.Basic
 import Mathlib.CategoryTheory.Comma.Over.Basic
+import Mathlib.CategoryTheory.Limits.Over
 import Mathlib.CategoryTheory.Limits.Types.Shapes
+import Mathlib.CategoryTheory.WithTerminal.Cone
 import Mathlib.LinearAlgebra.SymmetricAlgebra.Basic
 import Mathlib.LinearAlgebra.TensorProduct.Quotient
 import Mathlib.LinearAlgebra.TensorProduct.Tower
@@ -624,6 +627,8 @@ noncomputable def isLimitEvaluationFork (A : Under R) :
 noncomputable def isLimitFork : IsLimit (fork R x) :=
   evaluationJointlyReflectsLimits _ fun A ↦ isLimitEvaluationFork R x A
 
+variable (M k)
+
 /-- `left` is corepresentable by `Sym[R](Mᵏ)`. -/
 noncomputable def CorepresentableBy.left : Functor.CorepresentableBy (leftFunctor R M k)
     (R.mkUnder <| SymmetricAlgebra R (Fin k → M)) where
@@ -635,6 +640,24 @@ noncomputable def CorepresentableBy.right : Functor.CorepresentableBy (rightFunc
     (R.mkUnder <| SymmetricAlgebra R (Fin k → Fin k → R)) where
   homEquiv {A} := (CommRingCat.homMkUnderEquiv _ _ _).trans (corepresentRight R k A)
   homEquiv_comp φ f := by ext m i; simp
+
+variable {M k} in
+/-- The corepresentative of `composeNat`. -/
+noncomputable abbrev composeCorep : (R.mkUnder <| SymmetricAlgebra R (Fin k → Fin k → R)) ⟶
+    (R.mkUnder <| SymmetricAlgebra R (Fin k → M)) :=
+  (CorepresentableBy.left R M k).homOfNatTrans (CorepresentableBy.right R k) (composeNat R x)
+
+/-- The corepresentative of `const1Nat`. -/
+noncomputable abbrev const1Corep : (R.mkUnder <| SymmetricAlgebra R (Fin k → Fin k → R)) ⟶
+    (R.mkUnder <| SymmetricAlgebra R (Fin k → M)) :=
+  (CorepresentableBy.left R M k).homOfNatTrans (CorepresentableBy.right R k) (const1Nat R M k)
+
+/-- `chartFunctor` is corepresentable. -/
+noncomputable def CorepresentableBy.chartFunctor :
+    Functor.CorepresentableBy (chartFunctor R x)
+      (coequalizer (composeCorep R x) (const1Corep R M k)) :=
+  (CorepresentableBy.left R M k).equalizer (CorepresentableBy.right R k) (isLimitFork R x)
+    (colimit.isColimit _)
 
 end Category
 
