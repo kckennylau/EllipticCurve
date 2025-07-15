@@ -1,5 +1,6 @@
 import EllipticCurve.Basic
 import EllipticCurve.Grassmannians.Basic
+import EllipticCurve.Grassmannians.EqualizerCorepresentable
 import EllipticCurve.Lemmas
 import EllipticCurve.ProjectiveSpace.Basic
 import EllipticCurve.ProjectiveSpace.TensorProduct.BaseChange
