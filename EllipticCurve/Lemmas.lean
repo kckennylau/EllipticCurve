@@ -183,6 +183,11 @@ open TensorProduct
     e.baseChange R A M N (a ⊗ₜ m) = a ⊗ₜ (e m) :=
   rfl
 
+theorem LinearEquiv.baseChange_symm {R A M N : Type*} [CommRing R] [Ring A] [Algebra R A]
+    [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N] (e : M ≃ₗ[R] N) :
+    e.symm.baseChange R A = (e.baseChange R A).symm :=
+  rfl
+
 noncomputable def Submodule.quotientBaseChange {R : Type u} {M : Type v} (A : Type w) [CommRing R]
     [Ring A] [Algebra R A] [AddCommGroup M] [Module R M] (S : Submodule R M) :
     (A ⊗[R] M ⧸ S.baseChange A) ≃ₗ[A] A ⊗[R] (M ⧸ S) :=
@@ -265,3 +270,16 @@ theorem SMulCommClass.isScalarTower (R₁ : Type u) (R : Type v) [Monoid R₁]
   [CommMonoid R] [MulAction R₁ R] [SMulCommClass R₁ R R] : IsScalarTower R₁ R R where
   smul_assoc x₁ y z := by rw [smul_eq_mul, mul_comm, ← smul_eq_mul, ← smul_comm, smul_eq_mul,
     mul_comm, ← smul_eq_mul]
+
+@[simp] lemma Pi.map_single_one {ι : Type*} [DecidableEq ι] (i j : ι)
+    {α β : ι → Type*} [∀ i, Zero (α i)] [∀ i, One (α i)] [∀ i, Zero (β i)] [∀ i, One (β i)]
+    {F : Type*} [FunLike F (α j) (β j)] [ZeroHomClass F (α j) (β j)] [OneHomClass F (α j) (β j)]
+    (f : F) :
+    f (Pi.single i 1 j) = Pi.single i 1 j := by
+  obtain rfl | h := em (j = i) <;> simp [Pi.single, Function.update, *]
+
+@[simp] lemma Pi.map_single_one' {α β ι F : Type*} [DecidableEq ι]
+    [Zero α] [One α] [Zero β] [One β] [FunLike F α β]
+    [ZeroHomClass F α β] [OneHomClass F α β] (i j : ι) (f : F) :
+    f (Pi.single (M := fun _ ↦ α) i 1 j) = Pi.single (M := fun _ ↦ β) i 1 j :=
+  Pi.map_single_one (α := fun _ ↦ α) (β := fun _ ↦ β) i j f

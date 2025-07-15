@@ -87,11 +87,11 @@ abbrev chart (x : M) : Set ℙ(M; R) :=
 /-- Given `N ∈ chart R M x`, we have an isomorphism `M ⧸ N ≃ₗ[R] R` sending `x` to `1`. -/
 noncomputable def equivOfChart (x : M) {N : ℙ(M; R)} (hn : N ∈ chart R x) :
     (M ⧸ N.toSubmodule) ≃ₗ[R] R :=
-  Grassmannian.equivOfChart hn ≪≫ₗ LinearEquiv.funUnique (Fin 1) R R
+  Grassmannian.lequivOfChart _ hn ≪≫ₗ LinearEquiv.funUnique (Fin 1) R R
 
 lemma equivOfChart_apply (x : M) {N : ℙ(M; R)} (hn : N ∈ chart R x) :
     equivOfChart x hn (Submodule.Quotient.mk x) = 1 := by
-  rw [equivOfChart, LinearEquiv.trans_apply, Grassmannian.equivOfChart_apply (i:=0)]; rfl
+  rw [equivOfChart, LinearEquiv.trans_apply, Grassmannian.lequivOfChart_apply (i:=0)]; rfl
 
 /-- "Division by `x`" is well-defined on the `chart` where "`x` is invertible". -/
 noncomputable def div (y x : M) (p : chart R x) : R :=
@@ -130,7 +130,7 @@ lemma div_mul_div_symm (x y : M) (p : Set.Elem (chart R x ∩ chart R y)) :
 /-- `chart x` as a functor. `A` is sent to `chart A (A ⊗[R] M) (1 ⊗ₜ x)`. -/
 noncomputable abbrev chartFunctor (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (x : M) :
     Under R ⥤ Type (max u v) :=
-  Grassmannian.chartFunctor R M 1 (fun _ ↦ x)
+  Grassmannian.chartFunctor R (k := 1) (Function.const (Fin 1) x)
 
 lemma chartFunctor_obj (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (x : M) (A : Under R) :
     (chartFunctor R M x).obj A = chart A (1 ⊗ₜ x : A ⊗[R] M) :=
@@ -139,7 +139,7 @@ lemma chartFunctor_obj (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (x : M) (A : 
 /-- `chartFunctor` as a subfunctor of `ProjectiveSpace.functor`. -/
 noncomputable abbrev chartToFunctor (R : CommRingCat.{u}) (M : ModuleCat.{v} R) (x : M) :
     chartFunctor R M x ⟶ functor R M :=
-  Grassmannian.chartToFunctor R M 1 (fun _ ↦ x)
+  Grassmannian.chartToFunctor R _
 
 section zeros
 
@@ -162,10 +162,10 @@ def zerosOfCoordinates {n : ℕ} (f : Sym[R]^n(ι → R))
 
 variable {f}
 
-lemma ofLinearEquiv_mem_zeros (e : M ≃ₗ[R] M₁) (p : ℙ(M; R)) (hp : p ∈ zeros f) :
-    p.ofLinearEquiv e ∈ zeros (f.mapLinearEquiv n e) := by
+lemma congr_mem_zeros (e : M ≃ₗ[R] M₁) (p : ℙ(M; R)) (hp : p ∈ zeros f) :
+    p.congr e ∈ zeros (f.mapLinearEquiv n e) := by
   rw [zeros_def] at hp ⊢
-  rw [mapLinearEquiv_coe', map_map_apply, coe_ofLinearEquiv,
+  rw [mapLinearEquiv_coe', map_map_apply, coe_congr,
     ← Submodule.mapQ_mkQ p (h := Submodule.le_comap_map e p), ← map_map_apply, hp, map_zero]
 
 lemma baseChange_mem_zeros (p : ℙ(M; R)) (hp : p ∈ zeros f) :
@@ -179,7 +179,7 @@ variable {A B} in
 lemma map_mem_zeros (p : ℙ(A ⊗[R] M; A)) (hp : p ∈ zeros (f.toBaseChange R M A n)) (φ : A →ₐ[R] B) :
     p.map φ ∈ zeros (f.toBaseChange R M B n) := by
   letI : Algebra A B := φ.toAlgebra
-  convert ofLinearEquiv_mem_zeros (AlgebraTensorModule.cancelBaseChange R A B B M) _
+  convert congr_mem_zeros (AlgebraTensorModule.cancelBaseChange R A B B M) _
     (baseChange_mem_zeros B p hp)
   rw [mapLinearEquiv_coe', toBaseChange_apply_of_isScalarTower A]
 
