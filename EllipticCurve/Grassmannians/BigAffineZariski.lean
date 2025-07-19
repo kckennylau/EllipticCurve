@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau
 -/
 
--- import Mathlib.Algebra.Category.Ring.Under.Basic
 import Mathlib.AlgebraicGeometry.Cover.Open
+import Mathlib.AlgebraicGeometry.GammaSpecAdjunction
 import Mathlib.AlgebraicGeometry.Sites.BigZariski
 import Mathlib.CategoryTheory.Sites.DenseSubsite.InducedTopology
 import Mathlib.RingTheory.Ideal.Pointwise
@@ -83,7 +83,7 @@ open AlgebraicGeometry AffineScheme Scheme TensorProduct
 namespace CommRingCat
 
 /-- A scheme is covered by affines. -/
-instance : IsCoverDense (equivCommRingCat.inverse ⋙ forgetToScheme) Scheme.zariskiTopology.{u} where
+instance : IsCoverDense Scheme.Spec Scheme.zariskiTopology.{u} where
   is_cover X := ⟨.ofArrows (Spec ∘ X.affineOpenCover.obj) X.affineOpenCover.map,
     ⟨X.affineOpenCover.openCover, rfl⟩,
     fun _ u ⟨j⟩ ↦ ⟨⟨op (X.affineOpenCover.obj j), 𝟙 _, X.affineOpenCover.map j, by rw [id_comp]⟩⟩⟩
@@ -91,14 +91,14 @@ instance : IsCoverDense (equivCommRingCat.inverse ⋙ forgetToScheme) Scheme.zar
 /-- The Zariski topology on the opposite category of commutative rings, constructed using the
 induced topology from the Zariski topology on the category of schemes. -/
 def zariskiTopology : GrothendieckTopology CommRingCat.{u}ᵒᵖ :=
-  inducedTopology (equivCommRingCat.inverse ⋙ forgetToScheme) Scheme.zariskiTopology
+  inducedTopology Scheme.Spec Scheme.zariskiTopology
 
 structure StandardSystem (R : Type u) [CommRing R] : Type (u+1) where
   J : Type
   fintype : Fintype J := by infer_instance
   elem : J → R
   span_eq_top : Ideal.span (Set.range elem) = ⊤
-  loc : J → Type u
+  loc : J → Type u := fun j ↦ Localization.Away (elem j)
   commRing : ∀ j, CommRing (loc j) := by infer_instance
   algebra : ∀ j, Algebra R (loc j) := by infer_instance
   away : ∀ j, IsLocalization.Away (elem j) (loc j) := by infer_instance
@@ -326,5 +326,143 @@ def standardPretopology : Pretopology CommRingCat.{u}ᵒᵖ where
       .of_algebraMap_eq fun r ↦ rfl
     use s.bind t
     convert s.bind_cover t t' (fun j ↦ rfl); exact (ht _ _).symm
+
+open PrimeSpectrum
+
+/-- An open immersion `u : U ⟶ Spec R` is covered by `Spec R[1/f]`. In other words, for every
+`p : U`, there is `f : R` such that `p ∈ D(f) ⊆ U`, i.e. such that `Spec R[1/f] ⟶ Spec R`
+factors through `u`. -/
+lemma _root_.AlgebraicGeometry.Scheme.Hom.exists_factor
+    {R : Type u} [CommRing R] {U : Scheme.{u}} (u : U ⟶ Spec (of R)) [IsOpenImmersion u] (p : U) :
+    ∃ f : R, ∃ g : Spec (of (Localization.Away f)) ⟶ U,
+      basicOpen f ≤ u.opensRange ∧
+      IsOpenImmersion g ∧
+      g ≫ u = Spec.map (ofHom (algebraMap R (Localization.Away f))) ∧
+      p ∈ Set.range g.base := by
+  obtain ⟨_, ⟨(f : R), rfl⟩, hpf, hfu⟩ :=
+    isTopologicalBasis_basic_opens.exists_subset_of_mem_open
+      (u := u.opensRange.1) ⟨p, rfl⟩ u.opensRange.2
+  let g := AlgebraicGeometry.IsOpenImmersion.lift u
+    (Spec.map (ofHom (algebraMap R (Localization.Away f))))
+    ((localization_away_comap_range (Localization.Away f) f).trans_subset hfu)
+  have hgu : g ≫ u = _ := IsOpenImmersion.lift_fac _ _ _
+  refine ⟨f, g, hfu, inferInstance, hgu, u.isOpenEmbedding.injective.mem_set_image.mp ?_⟩
+  rw [← Set.range_comp, ← ContinuousMap.coe_comp, ← TopCat.hom_comp, ← comp_coeBase, hgu,
+    Spec.map_base, hom_ofHom, TopCat.hom_ofHom]
+  convert hpf using 1; exact localization_away_comap_range _ _
+
+-- NOFIX
+/-- Given a family of schemes with morphisms to `X` satisfying `P` that jointly cover `X`,
+`AffineCover.mkOfCovers` is an associated `P`-cover of `X`.
+
+See `Cover.mkOfCovers`. -/
+@[simps] noncomputable def _root_.AlgebraicGeometry.Scheme.AffineCover.mkOfCovers
+    {P : MorphismProperty Scheme.{u}} {X : Scheme.{u}}
+    (J : Type v) (obj : J → CommRingCat.{u}) (map : ∀ j, Spec (obj j) ⟶ X)
+    (covers : ∀ x : X, ∃ (j : J) (y : Spec (obj j)), (map j).base y = x)
+    (map_prop : ∀ (j : J), P (map j) := by infer_instance) :
+    AffineCover P X where
+  J := J
+  obj := obj
+  map := map
+  f x := (covers x).choose
+  covers x := (covers x).choose_spec
+  map_prop := map_prop
+
+/-- Given an open cover of `Spec R`, refine it to a cover by `Spec R[1/f]`. -/
+@[simps!] noncomputable
+def _root_.AlgebraicGeometry.Scheme.Cover.refinementSpec {R : CommRingCat.{u}}
+    (U : Cover IsOpenImmersion (Spec R)) : AffineOpenCover (Spec R) :=
+  .mkOfCovers
+    (J := { f : R // ∃ j : U.J, basicOpen f ≤ (U.map j).opensRange })
+    (obj := fun f ↦ of (Localization.Away f.val))
+    (map := fun f ↦ Spec.map (ofHom (algebraMap R (Localization.Away f.val))))
+    (covers := fun x ↦
+      let ⟨j, y, hjyx⟩ := U.exists_eq x
+      let ⟨f, g, hfj, hg, hgj, p, hypg⟩ := (U.map j).exists_factor y
+      ⟨⟨f, j, hfj⟩, p, hjyx ▸ hypg ▸ congr(($hgj.symm).base p)⟩)
+
+/-- Given an open cover indexed by a `Fintype`, shrink the fintype into `Type 0`. -/
+@[simps!] noncomputable def _root_.AlgebraicGeometry.Scheme.OpenCover.shrink {X : Scheme.{u}}
+    (U : OpenCover.{v} X) [Fintype U.J] : OpenCover.{0} X :=
+  U.reindex (equivShrink.{0} U.J).symm
+
+/-- Actually a subcover (the indexing type is a subtype of `U.J`). -/
+@[simps!] noncomputable def _root_.AlgebraicGeometry.Scheme.OpenCover.finiteSubcover'
+    {X : Scheme.{u}} [CompactSpace X] (U : OpenCover.{v} X) :
+    OpenCover.{v} X where
+  J := { j : U.J // ∃ x : U.finiteSubcover.J, U.f x.val = j }
+  obj j := U.obj j.val
+  map j := U.map j.val
+  f x := ⟨U.f (U.finiteSubcover.f x).val, _, rfl⟩
+  covers := U.finiteSubcover.covers
+
+noncomputable instance {X : Scheme.{u}} [CompactSpace X] (U : OpenCover.{v} X) :
+    Fintype U.finiteSubcover'.J :=
+  open Classical in Fintype.ofSurjective (fun x ↦ ⟨U.f x.val, x, rfl⟩) fun j ↦ by
+    obtain ⟨_, _, rfl⟩ := j; exact ⟨_, rfl⟩
+
+open TopologicalSpace
+
+theorem iSup_basicOpen_eq_top_iff_span_eq_top {R : Type u} [CommRing R] (s : Set R) :
+    ⨆ x : s, basicOpen x.val = ⊤ ↔ Ideal.span s = ⊤ := by
+  simp_rw [Opens.ext_iff, Opens.coe_iSup, basicOpen_eq_zeroLocus_compl, ← Set.compl_iInter,
+    ← PrimeSpectrum.zeroLocus_span {_}, ← zeroLocus_iSup, ← Ideal.span_iUnion,
+    Set.iUnion_of_singleton_coe, Opens.coe_top, Set.compl_univ_iff,
+    PrimeSpectrum.zeroLocus_empty_iff_eq_top]
+
+theorem iSup_basicOpen_eq_top_iff_span_range_eq_top {R : Type u} [CommRing R]
+    {ι : Type v} (f : ι → R) :
+    ⨆ i : ι, basicOpen (f i) = ⊤ ↔ Ideal.span (Set.range f) = ⊤ := by
+  rw [← iSup_basicOpen_eq_top_iff_span_eq_top, iSup_range']
+
+noncomputable def StandardSystem.ofOpenCover {R : CommRingCat.{u}} (U : OpenCover.{v} (Spec R)) :
+    StandardSystem R where
+  J := U.refinementSpec.openCover.finiteSubcover'.shrink.J
+  fintype := .ofEquiv _ (equivShrink _)
+  elem j := ((equivShrink _).symm j).val.val
+  span_eq_top := by
+    set U' := U.refinementSpec.openCover.finiteSubcover'.shrink
+    rw [← iSup_basicOpen_eq_top_iff_span_range_eq_top, Opens.ext_iff, Opens.coe_iSup,
+      Opens.coe_top, Set.eq_univ_iff_forall]
+    refine fun x ↦ Set.mem_iUnion_of_mem (U'.f x) ?_
+    convert U'.covers x; exact (localization_away_comap_range _ _).symm
+
+lemma StandardSystem.ofOpenCover_exists_factor {R : CommRingCat.{u}}
+    (U : OpenCover.{v} (Spec R)) (j : (ofOpenCover U).J) :
+    ∃ j' : U.J, ∃ g : Spec (of ((ofOpenCover U).loc j)) ⟶ U.obj j',
+      g ≫ U.map j' = Scheme.Spec.map ((ofOpenCover U).hom j) := by
+  obtain ⟨j', hj⟩ := ((equivShrink _).symm j).val.property
+  let g := IsOpenImmersion.lift (U.map j') (Scheme.Spec.map ((ofOpenCover U).hom j))
+    ((localization_away_comap_range (Localization.Away _) _).trans_subset hj)
+  exact ⟨j', g, IsOpenImmersion.lift_fac _ _ _⟩
+
+lemma zariskiEqGenerateStandard :
+    zariskiTopology.{u} = standardPretopology.toGrothendieck _ := by
+  refine le_antisymm ?_ ?_
+  · rintro X s ⟨R, ⟨U, rfl⟩, hrs⟩
+    refine ⟨_, ⟨.ofOpenCover U, rfl⟩, ?_⟩
+    rintro _ _ ⟨j⟩
+    obtain ⟨j', f, hf⟩ := ofOpenCover_exists_factor U j
+    obtain ⟨Z, g, h, hsg, hjhg⟩ := @hrs _ _ ⟨j'⟩
+    rw [hjhg, ← assoc, ← Spec.map_preimage (f ≫ h), Scheme.Spec_map, Scheme.Spec_map,
+      ← Spec.map_comp, Spec.map_inj, ← op_inj_iff] at hf
+    change (Spec.preimage (f ≫ h)).op ≫ g = (ofOpenCover U).hom j at hf
+    exact hf ▸ s.downward_closed hsg _
+  · rintro X u ⟨p, ⟨s, rfl⟩, hsu⟩
+    letI (j : ULift.{u} s.J) : IsLocalization.Away ((s.elem (Equiv.ulift j))) (s.loc j.down) :=
+      s.away j.down
+    refine ⟨_, ⟨(affineOpenCoverOfSpanRangeEqTop _ s.span_eq_top).openCover.copy
+        (ULift s.J) (fun j ↦ Spec (of (s.loc j.down))) (fun j ↦ Spec.map (ofHom (algebraMap _ _)))
+        Equiv.ulift (fun j ↦ Scheme.Spec.mapIso
+          (((Localization.algEquiv _ _).toRingEquiv.toCommRingCatIso).op))
+        fun j ↦ ?_,
+      rfl⟩, ?_⟩
+    · have : algebraMap (↑X.1) (s.loc j.down) =
+        ((Localization.algEquiv (Submonoid.powers (s.elem j.down)) (s.loc j.down)).toRingHom).comp
+          (algebraMap ((unop X).1) (Localization.Away (s.elem j.down))) := by ext; simp
+      simp [this]
+    rintro _ _ ⟨j⟩
+    exact ⟨_, _, 𝟙 _, hsu _ ⟨j.down⟩, rfl⟩
 
 end CommRingCat
