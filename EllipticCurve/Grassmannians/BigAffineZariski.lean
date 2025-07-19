@@ -404,18 +404,6 @@ noncomputable instance {X : Scheme.{u}} [CompactSpace X] (U : OpenCover.{v} X) :
 
 open TopologicalSpace
 
-theorem iSup_basicOpen_eq_top_iff_span_eq_top {R : Type u} [CommRing R] (s : Set R) :
-    ⨆ x : s, basicOpen x.val = ⊤ ↔ Ideal.span s = ⊤ := by
-  simp_rw [Opens.ext_iff, Opens.coe_iSup, basicOpen_eq_zeroLocus_compl, ← Set.compl_iInter,
-    ← PrimeSpectrum.zeroLocus_span {_}, ← zeroLocus_iSup, ← Ideal.span_iUnion,
-    Set.iUnion_of_singleton_coe, Opens.coe_top, Set.compl_univ_iff,
-    PrimeSpectrum.zeroLocus_empty_iff_eq_top]
-
-theorem iSup_basicOpen_eq_top_iff_span_range_eq_top {R : Type u} [CommRing R]
-    {ι : Type v} (f : ι → R) :
-    ⨆ i : ι, basicOpen (f i) = ⊤ ↔ Ideal.span (Set.range f) = ⊤ := by
-  rw [← iSup_basicOpen_eq_top_iff_span_eq_top, iSup_range']
-
 noncomputable def StandardSystem.ofOpenCover {R : CommRingCat.{u}} (U : OpenCover.{v} (Spec R)) :
     StandardSystem R where
   J := U.refinementSpec.openCover.finiteSubcover'.shrink.J
@@ -423,7 +411,7 @@ noncomputable def StandardSystem.ofOpenCover {R : CommRingCat.{u}} (U : OpenCove
   elem j := ((equivShrink _).symm j).val.val
   span_eq_top := by
     set U' := U.refinementSpec.openCover.finiteSubcover'.shrink
-    rw [← iSup_basicOpen_eq_top_iff_span_range_eq_top, Opens.ext_iff, Opens.coe_iSup,
+    rw [← iSup_basicOpen_eq_top_iff, Opens.ext_iff, Opens.coe_iSup,
       Opens.coe_top, Set.eq_univ_iff_forall]
     refine fun x ↦ Set.mem_iUnion_of_mem (U'.f x) ?_
     convert U'.covers x; exact (localization_away_comap_range _ _).symm
@@ -437,7 +425,30 @@ lemma StandardSystem.ofOpenCover_exists_factor {R : CommRingCat.{u}}
     ((localization_away_comap_range (Localization.Away _) _).trans_subset hj)
   exact ⟨j', g, IsOpenImmersion.lift_fac _ _ _⟩
 
-lemma zariskiEqGenerateStandard :
+@[simps!] noncomputable def StandardSystem.toAffineOpenCover {R : Type u} [CommRing R]
+    (s : StandardSystem R) : AffineOpenCover.{u} (Spec (of R)) := by
+  refine .mkOfCovers
+    (J := ULift.{u} s.J)
+    (obj := fun j ↦ of (s.loc j.down))
+    (map := fun j ↦ Spec.map (ofHom (algebraMap R (s.loc j.down))))
+    (covers := fun x ↦ ?_)
+    (map_prop := fun j ↦ ?_)
+  · have := iSup_basicOpen_eq_top_iff.mpr s.span_eq_top
+    rw [Opens.ext_iff, Opens.coe_iSup, Opens.coe_top, Set.eq_univ_iff_forall] at this
+    obtain ⟨j, hxj⟩ := Set.mem_iUnion.mp (this x)
+    refine ⟨ULift.up j, ?_⟩
+    rw [← Set.mem_range]
+    convert hxj using 1
+    exact localization_away_comap_range _ _
+  · have : algebraMap R (s.loc j.down) =
+      (Localization.algEquiv (Submonoid.powers (s.elem j.down)) (s.loc j.down)).toRingHom.comp
+        (algebraMap R (Localization.Away (s.elem j.down))) := by ext; simp
+    simp only [this, ofHom_comp, Spec.map_comp]
+    change IsOpenImmersion ((Scheme.Spec.mapIso (Localization.algEquiv
+      (Submonoid.powers (s.elem j.down)) (s.loc j.down)).toRingEquiv.toCommRingCatIso.op).hom ≫ _)
+    infer_instance
+
+lemma zariski_eq_toGrothendieck_standard :
     zariskiTopology.{u} = standardPretopology.toGrothendieck _ := by
   refine le_antisymm ?_ ?_
   · rintro X s ⟨R, ⟨U, rfl⟩, hrs⟩
@@ -450,19 +461,21 @@ lemma zariskiEqGenerateStandard :
     change (Spec.preimage (f ≫ h)).op ≫ g = (ofOpenCover U).hom j at hf
     exact hf ▸ s.downward_closed hsg _
   · rintro X u ⟨p, ⟨s, rfl⟩, hsu⟩
-    letI (j : ULift.{u} s.J) : IsLocalization.Away ((s.elem (Equiv.ulift j))) (s.loc j.down) :=
-      s.away j.down
-    refine ⟨_, ⟨(affineOpenCoverOfSpanRangeEqTop _ s.span_eq_top).openCover.copy
-        (ULift s.J) (fun j ↦ Spec (of (s.loc j.down))) (fun j ↦ Spec.map (ofHom (algebraMap _ _)))
-        Equiv.ulift (fun j ↦ Scheme.Spec.mapIso
-          (((Localization.algEquiv _ _).toRingEquiv.toCommRingCatIso).op))
-        fun j ↦ ?_,
-      rfl⟩, ?_⟩
-    · have : algebraMap (↑X.1) (s.loc j.down) =
-        ((Localization.algEquiv (Submonoid.powers (s.elem j.down)) (s.loc j.down)).toRingHom).comp
-          (algebraMap ((unop X).1) (Localization.Away (s.elem j.down))) := by ext; simp
-      simp [this]
+    refine ⟨_, ⟨s.toAffineOpenCover.openCover, rfl⟩, ?_⟩
     rintro _ _ ⟨j⟩
     exact ⟨_, _, 𝟙 _, hsu _ ⟨j.down⟩, rfl⟩
+
+noncomputable def sheafEquiv (A : Type*) [Category.{v} A]
+    [∀ X : Schemeᵒᵖ, HasLimitsOfShape (StructuredArrow X Scheme.Spec.op) A] :
+    Sheaf zariskiTopology.{u} A ≌ Sheaf Scheme.zariskiTopology.{u} A :=
+  CategoryTheory.Functor.sheafInducedTopologyEquivOfIsCoverDense _ _ _
+
+@[simp] lemma isSheaf_zariski_iff_isSheaf_standard (p : CommRingCat.{u}ᵒᵖᵒᵖ ⥤ Type v) :
+    Presheaf.IsSheaf zariskiTopology.{u} p ↔
+      ∀ (R : CommRingCat.{u}) (s : StandardSystem R), Presieve.IsSheafFor p s.cover := by
+  rw [zariski_eq_toGrothendieck_standard, isSheaf_iff_isSheaf_of_type, Presieve.isSheaf_pretopology]
+  constructor
+  · intro h R S; exact h _ ⟨S, rfl⟩
+  · rintro h X _ ⟨S, rfl⟩; exact h X.unop S
 
 end CommRingCat
