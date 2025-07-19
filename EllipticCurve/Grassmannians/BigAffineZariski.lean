@@ -21,18 +21,25 @@ universe u v
 open CategoryTheory Functor Opposite Category Limits
 
 set_option linter.unusedVariables false in
-def Canon (R : Type u) (S : Type v) : Type v := S
+/-- A type synonym to make a canonical `Algebra` structure where `r • s` is defeq to
+`algebraMap R S r * s`. -/
+def Canon (_R : Type u) (S : Type v) : Type v := S
 
 namespace Canon
 
 variable (R : Type u) (S : Type v)
 
+/-- A "constructor" to not abuse defeq. -/
 def of (x : S) : Canon R S := x
+
+/-- A "projection" to not abuse defeq. -/
 def down (x : Canon R S) : S := x
 
 instance [Semiring S] : Semiring (Canon R S) :=
   inferInstanceAs (Semiring S)
 
+/-- The ring structure is still the same, it is not affected by how the scalar multiplication is
+defined. -/
 @[simps] def ringEquiv [Semiring S] : Canon R S ≃+* S where
   toFun := down R S
   invFun := of R S
@@ -53,6 +60,7 @@ instance [CommRing S] : CommRing (Canon R S) :=
 instance [Field S] : Field (Canon R S) :=
   inferInstanceAs (Field S)
 
+/-- The `algebraMap` from `R` to the new `S`. -/
 def toCanon [CommSemiring R] [Semiring S] [Algebra R S] : R →+* Canon R S :=
   _root_.algebraMap R S
 
@@ -67,6 +75,7 @@ example [CommSemiring R] [CommSemiring S] [Algebra R S] :
     (algebraMap R (Canon R S)).toAlgebra = inferInstanceAs (Algebra R (Canon R S)) :=
   rfl
 
+/-- Even though the scalar multiplications are not defeq, they are still isomorphic as algebras. -/
 def algEquiv [CommSemiring R] [CommSemiring S] [Algebra R S] :
     Canon R S ≃ₐ[R] S :=
   AlgEquiv.ofRingEquiv (f := ringEquiv R S) fun _ ↦ rfl
@@ -93,14 +102,25 @@ induced topology from the Zariski topology on the category of schemes. -/
 def zariskiTopology : GrothendieckTopology CommRingCat.{u}ᵒᵖ :=
   inducedTopology Scheme.Spec Scheme.zariskiTopology
 
+/-- A standard system of covering `Spec R` by localizations `Spec R[1/fⱼ]` where `(f₁, ⋯, fₙ) = R`.
+The indexing type is required to be in `Type 0` and a `Fintype`. -/
 structure StandardSystem (R : Type u) [CommRing R] : Type (u+1) where
+  /-- The indexing type. -/
   J : Type
+  /-- The indexing type is required to be finite. -/
   fintype : Fintype J := by infer_instance
+  /-- The elements `fⱼ` whose localisations `Spec R[1/fⱼ]` will cover `Spec R`. -/
   elem : J → R
+  /-- The elements span the unit ideal. -/
   span_eq_top : Ideal.span (Set.range elem) = ⊤
+  /-- The localizations. They do not have to be the canonical one, they can be any localization
+  satisfying the `IsLocalization` predicate. -/
   loc : J → Type u := fun j ↦ Localization.Away (elem j)
+  /-- The localizations are commutative rings. -/
   commRing : ∀ j, CommRing (loc j) := by infer_instance
+  /-- The localizations are algebras over the base ring. -/
   algebra : ∀ j, Algebra R (loc j) := by infer_instance
+  /-- The localizations are localizations. -/
   away : ∀ j, IsLocalization.Away (elem j) (loc j) := by infer_instance
 
 namespace StandardSystem
@@ -108,18 +128,22 @@ namespace StandardSystem
 attribute [simp] fintype span_eq_top
 attribute [instance] fintype commRing algebra away
 
+/-- The object `Spec R[1/fⱼ]` for the given index `j`. -/
 @[simp] abbrev obj {R : Type u} [CommRing R] (s : StandardSystem R) (j : s.J) : CommRingCatᵒᵖ :=
   op (of (s.loc j))
 
+/-- The morphism from `Spec R[1/fⱼ]` to `Spec R` that will form a part of the cover. -/
 @[simp]
 abbrev hom {R : Type u} [CommRing R] (s : StandardSystem R) (j : s.J) : s.obj j ⟶ op (of R) :=
   op (ofHom (algebraMap R (s.loc j)))
 
-/-- A standard cover of Spec R by Spec R_{fᵢ} where {fᵢ}ᵢ is a finite set that generates the unit
-ideal of R. -/
+/-- A standard cover of `Spec R` by `Spec R[1/fⱼ]` where `{fⱼ}ⱼ` is a finite set that generates the
+unit ideal of R. -/
 inductive cover {R : Type u} [CommRing R] (s : StandardSystem R) : Presieve (op (of R)) where
   | mk (j : s.J) : cover s (s.hom j)
 
+/-- The standard system obtained from an isomorphism. Any isomorphism is a localization away from
+`1`. -/
 abbrev ofIsIso {R S : CommRingCat.{u}ᵒᵖ} (f : S ⟶ R) [IsIso f] : StandardSystem ↑(unop R) where
   J := Unit
   elem j := 1
@@ -142,6 +166,8 @@ abbrev ofIsIso {R S : CommRingCat.{u}ᵒᵖ} (f : S ⟶ R) [IsIso f] : StandardS
   · rintro ⟨j⟩; exact ⟨⟩
   · rintro ⟨⟩; exact ⟨()⟩
 
+/-- If `φ : R →+* S` is a ring homomorphism and we have `(fⱼ)ⱼ` that generate the unit ideal of R,
+then `(φ fⱼ)ⱼ` generate the unit ideal of `S`. -/
 noncomputable abbrev baseChange {R S : Type u} [CommRing R] [CommRing S] (f : R →+* S)
     (s : StandardSystem R)
     (loc' : s.J → Type u) [∀ j, CommRing (loc' j)] [∀ j, Algebra S (loc' j)]
@@ -152,10 +178,7 @@ noncomputable abbrev baseChange {R S : Type u} [CommRing R] [CommRing S] (f : R 
   span_eq_top := by rw [Set.range_comp', ← Ideal.map_span, s.span_eq_top, Ideal.map_top]
   loc := loc'
 
-inductive _root_.Presieve.pullbackArrows' {C : Type u} [Category C] {X Y : C} (f : Y ⟶ X)
-    (R : Presieve X) (cone : ∀ Z, ∀ (u : Z ⟶ X), R u → PullbackCone u f) : Presieve Y where
-  | mk (Z : C) (u : Z ⟶ X) (h : R u) : pullbackArrows' f R cone (cone Z u h).snd
-
+/-- A canoncial pullback cone in `CommRingCatᵒᵖ`. -/
 noncomputable def _root_.CommRingCat.pullbackConeOp {X Y Z : CommRingCat.{u}ᵒᵖ}
     (f : X ⟶ Z) (g : Y ⟶ Z) : PullbackCone f g :=
   letI := f.unop.hom.toAlgebra
@@ -168,6 +191,9 @@ noncomputable def _root_.CommRingCat.pullbackConeOp {X Y Z : CommRingCat.{u}ᵒ�
 instance (C : Type u) [Category.{v} C] : Trans (Iso (C := C)) Iso Iso where
   trans := Iso.trans
 
+/-- The `pullbackConeOp` is canonically isomorphic to the opposite of the `pushoutCocone` defined
+in `CommRingCat`. (Note that the tensor products have "different" algebra structures in the sense
+that they are equal but not defeq.) -/
 noncomputable def _root_.CommRingCat.pullbackConeOpIsoPullback {X Y Z : CommRingCat.{u}ᵒᵖ}
     (f : X ⟶ Z) (g : Y ⟶ Z) :
     letI := f.unop.hom.toAlgebra
@@ -175,6 +201,7 @@ noncomputable def _root_.CommRingCat.pullbackConeOpIsoPullback {X Y Z : CommRing
     pullbackConeOp f g ≅ (pushoutCocone Z.unop X.unop Y.unop).op :=
   PullbackCone.ext (Iso.op (RingEquiv.toCommRingCatIso (Canon.ringEquiv _ _).symm))
 
+/-- The `pullbackConeOp` is a pullback. -/
 noncomputable def _root_.CommRingCat.pullbackConeOpIsLimit {X Y Z : CommRingCat.{u}ᵒᵖ}
     (f : X ⟶ Z) (g : Y ⟶ Z) : IsLimit (pullbackConeOp f g) :=
   letI := f.unop.hom.toAlgebra
@@ -184,21 +211,10 @@ noncomputable def _root_.CommRingCat.pullbackConeOpIsLimit {X Y Z : CommRingCat.
   .ofIsoLimit (PushoutCocone.isColimitEquivIsLimitOp _ <| pushoutCoconeIsColimit _ _ _)
     (pullbackConeOpIsoPullback f g).symm
 
+/-- The `pullbackConeOp` is isomorphic to the pullback. -/
 noncomputable def _root_.CommRingCat.pullbackConeOpIso {X Y Z : CommRingCat.{u}ᵒᵖ}
     (f : X ⟶ Z) (g : Y ⟶ Z) : (pullbackConeOp f g).pt ≅ pullback f g :=
   (pullbackConeOpIsLimit f g).conePointUniqueUpToIso (limit.isLimit _)
-
-@[simp] lemma baseChange_cover {R S : Type u} [CommRing R] [CommRing S] (f : R →+* S)
-    (s : StandardSystem R) :
-    letI := f.toAlgebra;
-    (s.baseChange (algebraMap R S) fun j ↦ Canon S (S ⊗[R] Canon R (s.loc j))).cover =
-      Presieve.pullbackArrows' (op (ofHom f)) s.cover fun _ u _ ↦
-        (pullbackConeOp (op (ofHom f)) u).flip := by
-  letI := f.toAlgebra
-  have : f = algebraMap R S := rfl; rw [this]
-  ext Y u; constructor
-  · rintro ⟨j⟩; exact ⟨s.obj j, s.hom j, ⟨_⟩⟩
-  · rintro ⟨_, _, ⟨j⟩⟩; exact ⟨_⟩
 
 
 section Bind
@@ -207,6 +223,9 @@ variable {R : Type u} [CommRing R] (s : StandardSystem R)
   (t : (j : s.J) → StandardSystem (s.loc j))
   (j : s.J) (tj : StandardSystem (s.loc j)) (k : tj.J)
 
+/-- An auxiliary definition for `bind`ing standard systems. Given `(f₁, ⋯, fₙ) = R`, and then
+for a given `fⱼ` given a similar covering of `R[1/fⱼ]`, i.e. `(fⱼ₁, ⋯, fⱼₘ) = R[1/fⱼ]`, we
+first choose a representative of `fⱼᵢ` inside `R`. -/
 noncomputable def bindElem : R :=
   (IsLocalization.Away.sec (s.elem j) (tj.elem k)).1
 
@@ -253,7 +272,12 @@ theorem span_bindElem_eq_top :
   · exact pow_dvd_pow _ (Finset.single_le_sum (fun _ _ ↦ Nat.zero_le _) (Finset.mem_univ _))
   · exact Set.range_subset_iff.2 fun k ↦ ⟨⟨j, k⟩, rfl⟩
 
-noncomputable abbrev bind [∀ j k, Algebra R ((t j).loc k)]
+/-- The `bind`ing of covers. If `(f₁, ⋯, fₙ) = R`, and for each `j` we are also given cover
+`(fⱼ₁, ⋯, fⱼₘ) = R[1/fⱼ]` (`m` depends on `j`), then we can combine them to form a larger cover of
+`R`. More specifically, we choose representatives `rⱼᵢ : R` for `fⱼ₁ : R[1/fⱼ]`, then the element
+is `fⱼ * rⱼᵢ`. This has the property that `R[1/fⱼ][1/fⱼᵢ] = R[1/(fⱼ * rⱼᵢ)]`, in the sense that
+the former is a localization away from the chosen `fⱼ * rⱼᵢ` over `R`. -/
+noncomputable def bind [∀ j k, Algebra R ((t j).loc k)]
     [∀ j k, IsScalarTower R (s.loc j) ((t j).loc k)] :
     StandardSystem R where
   J := (j : s.J) × (t j).J
@@ -288,6 +312,8 @@ end StandardSystem
 
 open StandardSystem
 
+/-- A pretopology on `CommRingCatᵒᵖ` formed by considering standard covers of
+`Spec R[1/fⱼ] ⟶ Spec R` where the `(f₁, ⋯, fₙ) = R`. -/
 def standardPretopology : Pretopology CommRingCat.{u}ᵒᵖ where
   coverings R := { u : Presieve R | ∃ (s : StandardSystem ↑(unop R)), s.cover = u }
   has_isos R S f _ := ⟨ofIsIso f, ofIsIso_cover f⟩
@@ -370,7 +396,7 @@ See `Cover.mkOfCovers`. -/
   map_prop := map_prop
 
 /-- Given an open cover of `Spec R`, refine it to a cover by `Spec R[1/f]`. -/
-@[simps!] noncomputable
+@[simps! (isSimp := False)] noncomputable
 def _root_.AlgebraicGeometry.Scheme.Cover.refinementSpec {R : CommRingCat.{u}}
     (U : Cover IsOpenImmersion (Spec R)) : AffineOpenCover (Spec R) :=
   .mkOfCovers
@@ -404,6 +430,7 @@ noncomputable instance {X : Scheme.{u}} [CompactSpace X] (U : OpenCover.{v} X) :
 
 open TopologicalSpace
 
+/-- An open cover of `Spec R` can be refined to a standard cover in terms of `StandardSystem`. -/
 noncomputable def StandardSystem.ofOpenCover {R : CommRingCat.{u}} (U : OpenCover.{v} (Spec R)) :
     StandardSystem R where
   J := U.refinementSpec.openCover.finiteSubcover'.shrink.J
@@ -416,6 +443,7 @@ noncomputable def StandardSystem.ofOpenCover {R : CommRingCat.{u}} (U : OpenCove
     refine fun x ↦ Set.mem_iUnion_of_mem (U'.f x) ?_
     convert U'.covers x; exact (localization_away_comap_range _ _).symm
 
+/-- The refinement produced is actually a refinement. -/
 lemma StandardSystem.ofOpenCover_exists_factor {R : CommRingCat.{u}}
     (U : OpenCover.{v} (Spec R)) (j : (ofOpenCover U).J) :
     ∃ j' : U.J, ∃ g : Spec (of ((ofOpenCover U).loc j)) ⟶ U.obj j',
@@ -425,29 +453,32 @@ lemma StandardSystem.ofOpenCover_exists_factor {R : CommRingCat.{u}}
     ((localization_away_comap_range (Localization.Away _) _).trans_subset hj)
   exact ⟨j', g, IsOpenImmersion.lift_fac _ _ _⟩
 
-@[simps!] noncomputable def StandardSystem.toAffineOpenCover {R : Type u} [CommRing R]
-    (s : StandardSystem R) : AffineOpenCover.{u} (Spec (of R)) := by
-  refine .mkOfCovers
+/-- A standard system on `R` produces an affine open cover of `Spec R`.
+
+Note that this differs from `AlgebraicGeometry.Scheme.affineOpenCoverOfSpanRangeEqTop` by not
+requiring the localizations to be the canonical `Localization.Away f`. -/
+@[simps! (isSimp := False)] noncomputable
+def StandardSystem.toAffineOpenCover {R : Type u} [CommRing R]
+    (s : StandardSystem R) : AffineOpenCover.{u} (Spec (of R)) :=
+  .mkOfCovers
     (J := ULift.{u} s.J)
     (obj := fun j ↦ of (s.loc j.down))
     (map := fun j ↦ Spec.map (ofHom (algebraMap R (s.loc j.down))))
-    (covers := fun x ↦ ?_)
-    (map_prop := fun j ↦ ?_)
-  · have := iSup_basicOpen_eq_top_iff.mpr s.span_eq_top
-    rw [Opens.ext_iff, Opens.coe_iSup, Opens.coe_top, Set.eq_univ_iff_forall] at this
-    obtain ⟨j, hxj⟩ := Set.mem_iUnion.mp (this x)
-    refine ⟨ULift.up j, ?_⟩
-    rw [← Set.mem_range]
-    convert hxj using 1
-    exact localization_away_comap_range _ _
-  · have : algebraMap R (s.loc j.down) =
-      (Localization.algEquiv (Submonoid.powers (s.elem j.down)) (s.loc j.down)).toRingHom.comp
-        (algebraMap R (Localization.Away (s.elem j.down))) := by ext; simp
-    simp only [this, ofHom_comp, Spec.map_comp]
-    change IsOpenImmersion ((Scheme.Spec.mapIso (Localization.algEquiv
-      (Submonoid.powers (s.elem j.down)) (s.loc j.down)).toRingEquiv.toCommRingCatIso.op).hom ≫ _)
-    infer_instance
+    (covers := fun x ↦ by
+      have := iSup_basicOpen_eq_top_iff.mpr s.span_eq_top
+      rw [Opens.ext_iff, Opens.coe_iSup, Opens.coe_top, Set.eq_univ_iff_forall] at this
+      obtain ⟨j, hxj⟩ := Set.mem_iUnion.mp (this x)
+      refine ⟨ULift.up j, ?_⟩
+      rw [← Set.mem_range]
+      convert hxj using 1
+      exact localization_away_comap_range _ _)
+    (map_prop := fun j ↦ AlgebraicGeometry.IsOpenImmersion.of_isLocalization (s.elem j.down))
 
+/-- The Zariski topology on `CommRingCatᵒᵖ` (formed by the induced topology on `Scheme` via
+the functor `Scheme.Spec : CommRingCatᵒᵖ ⥤ Scheme`) is equal to the Grothendieck topology
+generated by the standard covers using `Spec R[1/fᵢ] ⟶ Spec R`.
+
+In other words, an open immersion locally looks like `Spec R[1/fᵢ] ⟶ Spec R`. -/
 lemma zariski_eq_toGrothendieck_standard :
     zariskiTopology.{u} = standardPretopology.toGrothendieck _ := by
   refine le_antisymm ?_ ?_
@@ -465,11 +496,17 @@ lemma zariski_eq_toGrothendieck_standard :
     rintro _ _ ⟨j⟩
     exact ⟨_, _, 𝟙 _, hsu _ ⟨j.down⟩, rfl⟩
 
+/-- The category of sheaves on `CommRingCatᵒᵖ` (using the pullback of the Zariski topology via
+`Spec`) is equivalent to the category of sheaves on `Scheme` under the Zariski topology.
+
+In other words, any sheaf on `CommRingCatᵒᵖ` can be extended uniquely to a sheaf on `Scheme`. -/
 noncomputable def sheafEquiv (A : Type*) [Category.{v} A]
     [∀ X : Schemeᵒᵖ, HasLimitsOfShape (StructuredArrow X Scheme.Spec.op) A] :
     Sheaf zariskiTopology.{u} A ≌ Sheaf Scheme.zariskiTopology.{u} A :=
   CategoryTheory.Functor.sheafInducedTopologyEquivOfIsCoverDense _ _ _
 
+/-- A lemma to help check the sheaf condition: it suffices to check for the standard cover of
+`Spec R[1/fⱼ] ⟶ Spec R` where `(f₁, ⋯, fₙ) = R`. -/
 @[simp] lemma isSheaf_zariski_iff_isSheaf_standard (p : CommRingCat.{u}ᵒᵖᵒᵖ ⥤ Type v) :
     Presheaf.IsSheaf zariskiTopology.{u} p ↔
       ∀ (R : CommRingCat.{u}) (s : StandardSystem R), Presieve.IsSheafFor p s.cover := by
