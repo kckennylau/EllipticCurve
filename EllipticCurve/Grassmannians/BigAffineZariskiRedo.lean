@@ -62,9 +62,7 @@ lemma _root_.Algebra.IsStandardOpenImmersion.away (r : R) :
 
 lemma isStandardOpenImmersion_algebraMap [Algebra R S] :
     (algebraMap R S).IsStandardOpenImmersion ↔ Algebra.IsStandardOpenImmersion R S := by
-  simp only [IsStandardOpenImmersion, Algebra.isStandardOpenImmersion_iff]
-  congr!
-  exact Algebra.algebra_ext _ _ fun _ ↦ rfl
+  rw [IsStandardOpenImmersion, Algebra.isStandardOpenImmersion_iff, toAlgebra_algebraMap]
 
 namespace IsStandardOpenImmersion
 
@@ -109,13 +107,15 @@ theorem containsIdentities : ContainsIdentities.{u} IsStandardOpenImmersion := i
 theorem stableUnderComposition : StableUnderComposition.{u} IsStandardOpenImmersion :=
   @comp
 
+theorem respectsIso : RespectsIso.{u} IsStandardOpenImmersion :=
+  stableUnderComposition.respectsIso fun e ↦ of_bijective e.bijective
+
 theorem isStableUnderBaseChange : IsStableUnderBaseChange.{u} IsStandardOpenImmersion := by
-  introv R hp hrs
-  rw [isStandardOpenImmersion_algebraMap] at hrs ⊢
-  obtain ⟨r, hrs⟩ := hrs
-  refine ⟨algebraMap R R' r, ?_⟩
-  have : Algebra.IsPushout R R' S S' := Algebra.IsPushout.symm hp
-  exact IsLocalization.isLocalization_of_algEquiv _ (Algebra.IsPushout.equiv R R' S S')
+  refine .mk respectsIso ?_
+  introv h
+  rw [isStandardOpenImmersion_algebraMap] at h ⊢
+  obtain ⟨r, _⟩ := h
+  exact ⟨algebraMap R S r, inferInstance⟩
 
 theorem holdsForLocalizationAway : HoldsForLocalizationAway.{u} IsStandardOpenImmersion := by
   introv R h
@@ -154,9 +154,9 @@ theorem uncurry_singleton {Y : C} (u : Y ⟶ X) : (singleton u).uncurry = { ⟨Y
 
 -- variable {s} (m : s.mapStruct F)
 
--- /-- Different from `functorPushforward`. -/
--- inductive map : Presieve (F.obj X) where
---   | of {Y : C} {u : Y ⟶ X} (h : s u) : map (F.map u)
+/-- Different from `functorPushforward`. -/
+inductive map : Presieve (F.obj X) where
+  | of {Y : C} {u : Y ⟶ X} (h : s u) : map (F.map u)
 
 -- @[simp] theorem map_singleton {X Y : C} (f : X ⟶ Y) :
 --     (singleton f).map F = singleton (F.map f) := by
@@ -182,14 +182,17 @@ def finite (C : Type u) [Category.{v} C] [HasPullbacks C] : Pretopology C where
   pullbacks X Y u s hs := sorry
   transitive X s t hs ht := sorry
 
-def comap {C : Type u₁} {D : Type u₂} [Category.{v₁} C] [Category.{v₂} D]
-    [HasPullbacks C] [HasPullbacks D] (F : C ⥤ D)
-    [∀ {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z), PreservesLimit (cospan f g) F]
-    (P : Pretopology D) : Pretopology C where
-  coverings X := { s : Presieve X | P (F.obj X) (s.map F) }
-  has_isos X Y f _ := by simpa using P.has_isos (F.map f)
-  pullbacks X Y u s hs := by simpa using P.pullbacks (F.map u) (s.map F) hs
-  transitive X s t hs ht := sorry
+-- def comap {C : Type u₁} {D : Type u₂} [Category.{v₁} C] [Category.{v₂} D]
+--     [HasPullbacks C] [HasPullbacks D] (F : C ⥤ D)
+--     [∀ {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z), PreservesLimit (cospan f g) F]
+--     (P : Pretopology D) : Pretopology C where
+--   coverings X := { s : Presieve X | P (F.obj X) (s.map F) }
+--   has_isos X Y f _ := by simpa using P.has_isos (F.map f)
+--   pullbacks X Y u s hs := by simpa using P.pullbacks (F.map u) (s.map F) hs
+--   transitive X s t hs ht := sorry
+-- NOTE: to make pullback work, we need to for each Y_i ⟶ X, choose one object in D that is
+-- isomorphic to F(Y_i), which will complicate things more
+
 
 end Pretopology
 
@@ -215,10 +218,9 @@ def surjectiveFamiliesTopology : GrothendieckTopology Scheme.{u} where
     ⟨Z, z, v ≫ u, htv, by simp [hzy, hyx]⟩
 
 lemma surjectiveFamiliesTopology_eq_toGrothendieck_surjectiveFamiliesPretopology :
-    surjectiveFamiliesTopology.{u} = surjectiveFamiliesPretopology.toGrothendieck := by
-  ext X s
-  exact ⟨fun hs ↦ ⟨s, hs, le_rfl⟩,
-    fun ⟨p, hp, hps⟩ x ↦ let ⟨Y, y, u, hu, hyx⟩ := hp x; ⟨Y, y, u, hps _ hu, hyx⟩⟩
+    surjectiveFamiliesTopology.{u} = surjectiveFamiliesPretopology.toGrothendieck :=
+  GrothendieckTopology.ext <| funext fun _ ↦ Set.ext fun s ↦ ⟨fun hs ↦ ⟨s, hs, le_rfl⟩,
+    fun ⟨_, hp, hps⟩ x ↦ let ⟨Y, y, u, hu, hyx⟩ := hp x; ⟨Y, y, u, hps _ hu, hyx⟩⟩
 
 variable {X : Scheme.{u}} {P : MorphismProperty Scheme.{u}}
 
@@ -367,12 +369,20 @@ instance : standardOpenImmersion.ContainsIdentities where
 instance : standardOpenImmersion.IsMultiplicative where
   comp_mem _ _ := RingHom.IsStandardOpenImmersion.comp
 
--- awaiting https://github.com/leanprover-community/mathlib4/pull/27380
 instance : standardOpenImmersion.op.IsStableUnderBaseChange :=
-  sorry
+  @MorphismProperty.IsStableUnderCobaseChange.op _ _ _ <|
+    RingHom.isStableUnderCobaseChange_toMorphismProperty_iff.mpr
+      RingHom.IsStandardOpenImmersion.isStableUnderBaseChange
 
 def standard : Pretopology CommRingCat.{u}ᵒᵖ :=
   standardOpenImmersion.op.pretopology
+
+theorem isOpenImmersion_of_mem_standard {X Y : CommRingCat.{u}ᵒᵖ} {p : Presieve X}
+    (hp : p ∈ standard.coverings X) {u : Y ⟶ X} (hu : p u) :
+    IsOpenImmersion (Scheme.Spec.map u) := by
+  algebraize [u.unop.hom]
+  obtain ⟨r, hr⟩ := hp hu
+  exact AlgebraicGeometry.IsOpenImmersion.of_isLocalization r
 
 def JointlySurjective (X : CommRingCat.{u}ᵒᵖ) (s : Presieve X) : Prop :=
   ∀ p : Spec X.unop, ∃ (Y : CommRingCatᵒᵖ) (u : Y ⟶ X) (_ : s u)
@@ -389,15 +399,13 @@ theorem of_isIso {X Y : CommRingCat.{u}ᵒᵖ} (f : Y ⟶ X) [IsIso f] :
 
 end JointlySurjective
 
+-- a bit complicated to generalise
 open JointlySurjective in
-def jointlySurjective : Pretopology CommRingCat.{u}ᵒᵖ :=
-  surjectiveFamiliesPretopology.pullback
---
-/- where
+def jointlySurjective : Pretopology CommRingCat.{u}ᵒᵖ where
   coverings X := { s : Presieve X | JointlySurjective X s }
   has_isos X Y := of_isIso
   pullbacks X Y u s hs := sorry
-  transitive X s t hs ht := sorry -/
+  transitive X s t hs ht := sorry
 
 open PrimeSpectrum
 
@@ -427,7 +435,7 @@ open TopologicalSpace
 def zariskiPretopology : Pretopology CommRingCat.{u}ᵒᵖ :=
   standard ⊓ (jointlySurjective ⊓ .finite _)
 
--- MOVE / replace
+-- todo: replace definition (#28603)
 theorem _root_.AlgebraicGeometry.Scheme.zariskiTopology_eq :
     Scheme.zariskiTopology.{u} = grothendieckTopology IsOpenImmersion :=
   rfl
@@ -459,11 +467,9 @@ theorem finite_ofCover {X : CommRingCat.{u}ᵒᵖ}
 
 lemma zariskiTopology_eq_toGrothendieck_zariskiPretopology :
     zariskiTopology.{u} = zariskiPretopology.toGrothendieck := by
-  -- todo: replace definition
-  -- change Scheme.Spec.inducedTopology (grothendieckTopology IsOpenImmersion) = _
+  -- todo: replace definition (#28603)
+  change Scheme.Spec.inducedTopology (grothendieckTopology IsOpenImmersion) = _
   ext X s
-  haveI := AlgebraicGeometry.Scheme.isJointlySurjectivePreserving
-  -- rw [mem_inducedTopology_sieves_iff, grothendieckTopology_eq_inf]
   constructor
   · rintro ⟨-, ⟨U, rfl⟩, hus⟩
     set U' := U.refinementSpec.finiteSubcover
@@ -477,19 +483,19 @@ lemma zariskiTopology_eq_toGrothendieck_zariskiPretopology :
     · exact finite_ofCover U'
     · rintro _ _ ⟨j', rfl, h⟩
       rw [eqToHom_refl, id_comp] at h; subst h
-      have : U'.openCover.IsRefinement U :=
-        U.refinementSpec.isRefinement_finiteSubcover.trans
-          U.isRefinement_refinementSpec
-      obtain ⟨j, f, hf, hfj⟩ := this j'
+      obtain ⟨j, f, hf, hfj⟩ := U.refinementSpec.isRefinement_finiteSubcover.trans
+        U.isRefinement_refinementSpec j'
       obtain ⟨Z, g, h, hsg, hjhg⟩ := hus _ ⟨j⟩
       rw [← AffineOpenCover.openCover_map, ← hfj, hjhg, ← assoc, Spec.preimage_comp,
         Scheme.Spec_map, Spec.preimage_map, op_comp, Quiver.Hom.op_unop]
       exact s.downward_closed hsg _
   · rintro ⟨p, ⟨std, surj, fin⟩, hsu⟩
-    rw [zariskiTopology, mem_inducedTopology_sieves_iff, Scheme.zariskiTopology_eq,
-      grothendieckTopology_eq_inf]
-    refine ⟨p.functorPushforward Scheme.Spec, ⟨?_, ?_⟩, ?_⟩
-    · refine fun x ↦ _
+    rw [mem_inducedTopology_sieves_iff, grothendieckTopology_eq_inf]
+    refine ⟨p.map Scheme.Spec, ⟨fun x ↦ ?_, ?_⟩, ?_⟩
+    · obtain ⟨Y, u, hu, y, rfl⟩ := surj x
+      exact ⟨Scheme.Spec.obj Y, y, Scheme.Spec.map u, ⟨hu⟩, rfl⟩
+    · exact fun ⟨hu⟩ ↦ isOpenImmersion_of_mem_standard std hu
+    · exact fun _ _ ⟨hu⟩ ↦ ⟨_, _, 𝟙 _, hsu _ hu, by rw [id_comp]⟩
 
 -- /-- A lemma to help check the sheaf condition: it suffices to check for the standard cover of
 -- `Spec R[1/fⱼ] ⟶ Spec R` where `(f₁, ⋯, fₙ) = R`. -/
