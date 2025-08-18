@@ -465,8 +465,7 @@ theorem finite_ofCover {X : CommRingCat.{u}ᵒᵖ}
 
 lemma zariskiTopology_eq_toGrothendieck_zariskiPretopology :
     zariskiTopology.{u} = zariskiPretopology.toGrothendieck := by
-  -- todo: replace definition (#28603)
-  change Scheme.Spec.inducedTopology (grothendieckTopology IsOpenImmersion) = _
+  unfold zariskiTopology Scheme.zariskiTopology
   ext X s
   constructor
   · rintro ⟨-, ⟨U, rfl⟩, hus⟩
