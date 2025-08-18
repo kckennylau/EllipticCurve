@@ -47,12 +47,14 @@ namespace RingHom
 
 variable {R S T : Type*} [CommRing R] [CommRing S] [CommRing T] (f : R →+* S) (g : S →+* T)
 
+/-- A standard open immersion is one that is a localization map away from some element. -/
 @[algebraize RingHom.IsStandardOpenImmersion.toAlgebra]
 def IsStandardOpenImmersion : Prop :=
   letI := f.toAlgebra
   ∃ r : R, IsLocalization.Away r S
 
 variable (R S) in
+/-- A standard open immersion is one that is a localization map away from some element. -/
 @[mk_iff] class _root_.Algebra.IsStandardOpenImmersion [Algebra R S] : Prop where
   exists_away : ∃ r : R, IsLocalization.Away r S
 
@@ -83,7 +85,6 @@ variable (R) in
 /-- The identity map of a ring is a standard open immersion. -/
 lemma id : (RingHom.id R).IsStandardOpenImmersion :=
   of_bijective Function.bijective_id
--- split!
 
 variable {f g} in
 /-- The composition of two standard open immersions is a standard open immersion. -/
@@ -104,8 +105,7 @@ lemma comp (hf : f.IsStandardOpenImmersion) (hg : g.IsStandardOpenImmersion) :
 
 theorem containsIdentities : ContainsIdentities.{u} IsStandardOpenImmersion := id
 
-theorem stableUnderComposition : StableUnderComposition.{u} IsStandardOpenImmersion :=
-  @comp
+theorem stableUnderComposition : StableUnderComposition.{u} IsStandardOpenImmersion := @comp
 
 theorem respectsIso : RespectsIso.{u} IsStandardOpenImmersion :=
   stableUnderComposition.respectsIso fun e ↦ of_bijective e.bijective
@@ -137,10 +137,7 @@ variable {C : Type u} [Category.{v} C] {X : C} (s : Presieve X)
 @[ext] lemma ext {s₁ s₂ : Presieve X} (h : ∀ Y : C, @s₁ Y = @s₂ Y) : s₁ = s₂ :=
   funext h
 
--- lemma _root_.Sigma.ext_hom_iff {s₁ s₂ : Σ Y, Y ⟶ X} :
---     s₁ = s₂ ↔ ∃ h : s₁.1 = s₂.1, eqToHom h.symm ≫ s₁.2 = s₂.2 := by
---   simp_rw [Sigma.ext_iff, ← heq_iff_eq, eqToHom_comp_heq_iff, exists_prop]
-
+/-- Uncurry a presieve to one set over the sigma type. -/
 def uncurry : Set (Σ Y, Y ⟶ X) :=
   { u | s u.snd }
 
@@ -151,13 +148,10 @@ def uncurry : Set (Σ Y, Y ⟶ X) :=
     rw [Set.mem_singleton_iff, Sigma.ext_iff] at h
     obtain ⟨rfl, h⟩ := h; subst h; constructor
 
+/-- The uncurried version of `pullbackArrows`. -/
 @[simp] noncomputable nonrec
 def _root_.Sigma.pullback [HasPullbacks C] {B : C} (b : B ⟶ X) (f : Σ Y, Y ⟶ X) : Σ Y, Y ⟶ B :=
   ⟨pullback f.2 b, pullback.snd _ _⟩
-
-@[simp]
-def _root_.Sigma.map_hom {Y : C} (u : Y ⟶ X) (f : Σ Z, Z ⟶ Y) : Σ Z, Z ⟶ X :=
-  ⟨f.1, f.2 ≫ u⟩
 
 @[simp] theorem uncurry_pullbackArrows [HasPullbacks C] {B : C} (b : B ⟶ X) :
     (pullbackArrows b s).uncurry = Sigma.pullback b '' s.uncurry := by
@@ -168,6 +162,11 @@ def _root_.Sigma.map_hom {Y : C} (u : Y ⟶ X) (f : Σ Z, Z ⟶ Y) : Σ Z, Z ⟶
     obtain ⟨rfl, h⟩ := h
     rw [heq_iff_eq] at h; subst h
     exact ⟨Y, u, hu⟩
+
+/-- The uncurried version of composing on the right. -/
+@[simp]
+def _root_.Sigma.map_hom {Y : C} (u : Y ⟶ X) (f : Σ Z, Z ⟶ Y) : Σ Z, Z ⟶ X :=
+  ⟨f.1, f.2 ≫ u⟩
 
 @[simp] theorem uncurry_bind (t : ⦃Y : C⦄ → (f : Y ⟶ X) → s f → Presieve Y) :
     (s.bind t).uncurry = ⋃ i ∈ s.uncurry, Sigma.map_hom i.2 '' (t _ ‹_›).uncurry := by
@@ -180,28 +179,9 @@ def _root_.Sigma.map_hom {Y : C} (u : Y ⟶ X) (f : Σ Z, Z ⟶ Y) : Σ Z, Z ⟶
     rw [heq_iff_eq] at h; subst h
     exact ⟨_, _, _, _, hg, rfl⟩
 
--- /-- A choice of arrows isomorphic to `F.map u` in order to define `Presieve.map`. -/
--- structure mapStruct where
---   obj {Y : C} (u : Y ⟶ X) (h : s u) : D
---   iso {Y : C} (u : Y ⟶ X) (h : s u) : obj u h ≅ F.obj Y
-
--- variable {s} (m : s.mapStruct F)
-
-/-- Different from `functorPushforward`. -/
+/-- This presieve generates `functorPushforward`. -/
 inductive map : Presieve (F.obj X) where
   | of {Y : C} {u : Y ⟶ X} (h : s u) : map (F.map u)
-
--- @[simp] theorem map_singleton {X Y : C} (f : X ⟶ Y) :
---     (singleton f).map F = singleton (F.map f) := by
---   ext Z u; constructor
---   · rintro ⟨⟨⟩⟩; exact ⟨⟩
---   · rintro ⟨⟩; exact ⟨⟨⟩⟩
-
--- @[simp] theorem map_pullback [HasPullbacks C] [HasPullbacks D]
---     {Y : C} {u : Y ⟶ X} [∀ {Z : C} {f : Z ⟶ X}, PreservesLimit (cospan u f) F] :
---     (pullbackArrows u s).map F =
---       (pullbackArrows (F.map u) (s.map F)).bind _ :=
---   _
 
 end Presieve
 
@@ -209,23 +189,13 @@ namespace Pretopology
 
 open Presieve
 
+/-- The finite pretopology on a category consists of finite presieves, i.e. a presieve with finitely
+many maps after uncurrying. -/
 def finite (C : Type u) [Category.{v} C] [HasPullbacks C] : Pretopology C where
   coverings X := { s : Presieve X | s.uncurry.Finite }
   has_isos X Y f _ := by simp
   pullbacks X Y u s hs := by simpa using hs.image _
   transitive X s t hs ht := by simpa using hs.biUnion' fun _ _ ↦ (ht _ _).image _
-
--- def comap {C : Type u₁} {D : Type u₂} [Category.{v₁} C] [Category.{v₂} D]
---     [HasPullbacks C] [HasPullbacks D] (F : C ⥤ D)
---     [∀ {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z), PreservesLimit (cospan f g) F]
---     (P : Pretopology D) : Pretopology C where
---   coverings X := { s : Presieve X | P (F.obj X) (s.map F) }
---   has_isos X Y f _ := by simpa using P.has_isos (F.map f)
---   pullbacks X Y u s hs := by simpa using P.pullbacks (F.map u) (s.map F) hs
---   transitive X s t hs ht := sorry
--- NOTE: to make pullback work, we need to for each Y_i ⟶ X, choose one object in D that is
--- isomorphic to F(Y_i), which will complicate things more
-
 
 end Pretopology
 
@@ -237,6 +207,8 @@ namespace AlgebraicGeometry
 
 namespace Scheme
 
+/-- The jointly surjective topology on `Scheme` is defined by the same condition as the jointly
+surjective pretopology. -/
 def surjectiveFamiliesTopology : GrothendieckTopology Scheme.{u} where
   sieves X s := surjectiveFamiliesPretopology X s
   top_mem' X x := ⟨X, x, 𝟙 X, trivial, by simp⟩
@@ -279,7 +251,6 @@ lemma Hom.exists_factor
     Spec.map_base, hom_ofHom, TopCat.hom_ofHom]
   convert hpf using 1; exact localization_away_comap_range _ _
 
--- NOFIX
 /-- Given a family of schemes with morphisms to `X` satisfying `P` that jointly cover `X`,
 `AffineCover.mkOfCovers` is an associated `P`-cover of `X`.
 
@@ -336,6 +307,7 @@ end Cover
 
 namespace AffineOpenCover
 
+/-- An arbitrarily chosen finite affine open subcover of an affine open cover of a compact space. -/
 @[simps (isSimp := false)] noncomputable
 def finiteSubcover {X : Scheme.{u}} [CompactSpace X] (U : AffineOpenCover.{v} X) :
     AffineOpenCover.{u} X where
@@ -386,6 +358,7 @@ noncomputable def sheafEquiv (A : Type*) [Category.{v} A]
     Sheaf zariskiTopology.{u} A ≌ Sheaf Scheme.zariskiTopology.{u} A :=
   CategoryTheory.Functor.sheafInducedTopologyEquivOfIsCoverDense _ _ _
 
+/-- A standard open immersion is one that is a localization map away from some element. -/
 def standardOpenImmersion : MorphismProperty CommRingCat.{u} :=
   RingHom.toMorphismProperty RingHom.IsStandardOpenImmersion
 
@@ -407,6 +380,8 @@ instance : standardOpenImmersion.op.IsStableUnderBaseChange :=
     RingHom.isStableUnderCobaseChange_toMorphismProperty_iff.mpr
       RingHom.IsStandardOpenImmersion.isStableUnderBaseChange
 
+/-- The standard pretopology on `CommRingCatᵒᵖ` consists standard open immersions, i.e. those
+that are localization maps away from some element. -/
 def standard : Pretopology CommRingCat.{u}ᵒᵖ :=
   standardOpenImmersion.op.pretopology
 
@@ -417,10 +392,13 @@ theorem isOpenImmersion_of_mem_standard {X Y : CommRingCat.{u}ᵒᵖ} {p : Presi
   obtain ⟨r, hr⟩ := hp hu
   exact AlgebraicGeometry.IsOpenImmersion.of_isLocalization r
 
+/-- A presieve is jointly surjective if it covers every point in the spectrum. -/
 def JointlySurjective (X : CommRingCat.{u}ᵒᵖ) (s : Presieve X) : Prop :=
   ∀ p : Spec X.unop, ∃ (Y : CommRingCatᵒᵖ) (u : Y ⟶ X) (_ : s u)
     (q : Spec Y.unop), (Spec.map u.unop).base q = p
 
+/-- The jointly surjective pretopology on `CommRingCatᵒᵖ` consists of jointly surjective presieves.
+-/
 def jointlySurjective : Pretopology CommRingCat.{u}ᵒᵖ where
   coverings X := { s : Presieve X | JointlySurjective X s }
   has_isos X Y f _ y :=
@@ -467,16 +445,10 @@ open TopologicalSpace
 def zariskiPretopology : Pretopology CommRingCat.{u}ᵒᵖ :=
   standard ⊓ (jointlySurjective ⊓ .finite _)
 
--- todo: replace definition (#28603)
-theorem _root_.AlgebraicGeometry.Scheme.zariskiTopology_eq :
-    Scheme.zariskiTopology.{u} = grothendieckTopology IsOpenImmersion :=
-  rfl
-
--- AffineCover ↔ JointlySurjective
+/-- The presieve that corresponds to an affine cover. -/
 def _root_.CategoryTheory.Presieve.ofAffineCover {X : CommRingCat.{u}ᵒᵖ}
     {P : MorphismProperty Scheme.{u}} (U : AffineCover.{v} P (Spec X.unop)) :
     Presieve X :=
-  -- .functorPullback Scheme.Spec <| .ofArrows U.obj U.map
   fun Y u ↦ ∃ (j : U.J) (h : Y = op (U.obj j)), u = eqToHom h ≫ (Spec.preimage (U.map j)).op
 
 open Presieve
