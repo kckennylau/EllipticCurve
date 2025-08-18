@@ -137,15 +137,48 @@ variable {C : Type u} [Category.{v} C] {X : C} (s : Presieve X)
 @[ext] lemma ext {s₁ s₂ : Presieve X} (h : ∀ Y : C, @s₁ Y = @s₂ Y) : s₁ = s₂ :=
   funext h
 
+-- lemma _root_.Sigma.ext_hom_iff {s₁ s₂ : Σ Y, Y ⟶ X} :
+--     s₁ = s₂ ↔ ∃ h : s₁.1 = s₂.1, eqToHom h.symm ≫ s₁.2 = s₂.2 := by
+--   simp_rw [Sigma.ext_iff, ← heq_iff_eq, eqToHom_comp_heq_iff, exists_prop]
+
 def uncurry : Set (Σ Y, Y ⟶ X) :=
   { u | s u.snd }
 
-theorem uncurry_singleton {Y : C} (u : Y ⟶ X) : (singleton u).uncurry = { ⟨Y, u⟩ } := by
+@[simp] theorem uncurry_singleton {Y : C} (u : Y ⟶ X) : (singleton u).uncurry = { ⟨Y, u⟩ } := by
   ext ⟨Z, v⟩; constructor
   · rintro ⟨⟩; rfl
   · intro h
     rw [Set.mem_singleton_iff, Sigma.ext_iff] at h
     obtain ⟨rfl, h⟩ := h; subst h; constructor
+
+@[simp] noncomputable nonrec
+def _root_.Sigma.pullback [HasPullbacks C] {B : C} (b : B ⟶ X) (f : Σ Y, Y ⟶ X) : Σ Y, Y ⟶ B :=
+  ⟨pullback f.2 b, pullback.snd _ _⟩
+
+@[simp]
+def _root_.Sigma.map_hom {Y : C} (u : Y ⟶ X) (f : Σ Z, Z ⟶ Y) : Σ Z, Z ⟶ X :=
+  ⟨f.1, f.2 ≫ u⟩
+
+@[simp] theorem uncurry_pullbackArrows [HasPullbacks C] {B : C} (b : B ⟶ X) :
+    (pullbackArrows b s).uncurry = Sigma.pullback b '' s.uncurry := by
+  ext ⟨Z, v⟩; constructor
+  · rintro ⟨Y, u, hu⟩; exact ⟨⟨Y, u⟩, hu, rfl⟩
+  · rintro ⟨⟨Y, u⟩, hu, h⟩
+    rw [Sigma.ext_iff] at h
+    obtain ⟨rfl, h⟩ := h
+    rw [heq_iff_eq] at h; subst h
+    exact ⟨Y, u, hu⟩
+
+@[simp] theorem uncurry_bind (t : ⦃Y : C⦄ → (f : Y ⟶ X) → s f → Presieve Y) :
+    (s.bind t).uncurry = ⋃ i ∈ s.uncurry, Sigma.map_hom i.2 '' (t _ ‹_›).uncurry := by
+  ext ⟨Z, v⟩; simp only [Set.mem_iUnion, Set.mem_image]; constructor
+  · rintro ⟨Y, g, f, hf, ht, hv⟩
+    exact ⟨⟨_, f⟩, hf, ⟨_, g⟩, ht, Sigma.ext rfl (heq_of_eq hv)⟩
+  · rintro ⟨⟨_, f⟩, hf, ⟨Y, g⟩, hg, h⟩
+    rw [Sigma.ext_iff] at h
+    obtain ⟨rfl, h⟩ := h
+    rw [heq_iff_eq] at h; subst h
+    exact ⟨_, _, _, _, hg, rfl⟩
 
 -- /-- A choice of arrows isomorphic to `F.map u` in order to define `Presieve.map`. -/
 -- structure mapStruct where
@@ -178,9 +211,9 @@ open Presieve
 
 def finite (C : Type u) [Category.{v} C] [HasPullbacks C] : Pretopology C where
   coverings X := { s : Presieve X | s.uncurry.Finite }
-  has_isos X Y f _ := by rw [Set.mem_setOf, uncurry_singleton]; exact Set.finite_singleton _
-  pullbacks X Y u s hs := sorry
-  transitive X s t hs ht := sorry
+  has_isos X Y f _ := by simp
+  pullbacks X Y u s hs := by simpa using hs.image _
+  transitive X s t hs ht := by simpa using hs.biUnion' fun _ _ ↦ (ht _ _).image _
 
 -- def comap {C : Type u₁} {D : Type u₂} [Category.{v₁} C] [Category.{v₂} D]
 --     [HasPullbacks C] [HasPullbacks D] (F : C ⥤ D)
@@ -388,24 +421,23 @@ def JointlySurjective (X : CommRingCat.{u}ᵒᵖ) (s : Presieve X) : Prop :=
   ∀ p : Spec X.unop, ∃ (Y : CommRingCatᵒᵖ) (u : Y ⟶ X) (_ : s u)
     (q : Spec Y.unop), (Spec.map u.unop).base q = p
 
-namespace JointlySurjective
-
-open PrimeSpectrum
-
-theorem of_isIso {X Y : CommRingCat.{u}ᵒᵖ} (f : Y ⟶ X) [IsIso f] :
-    JointlySurjective X (Presieve.singleton f) :=
-  fun p ↦ ⟨Y, f, ⟨⟩, p.comap (inv f.unop).hom, by
-    rw [Spec.map_base_apply, ← comap_comp_apply, ← hom_comp, IsIso.hom_inv_id]; simp⟩
-
-end JointlySurjective
-
--- a bit complicated to generalise
-open JointlySurjective in
 def jointlySurjective : Pretopology CommRingCat.{u}ᵒᵖ where
   coverings X := { s : Presieve X | JointlySurjective X s }
-  has_isos X Y := of_isIso
-  pullbacks X Y u s hs := sorry
-  transitive X s t hs ht := sorry
+  has_isos X Y f _ y :=
+    ⟨Y, f, ⟨⟩, y.comap (inv f.unop).hom, by
+      rw [Spec.map_base_apply, ← comap_comp_apply, ← hom_comp, IsIso.hom_inv_id]; simp⟩
+  pullbacks X Y u s hs y :=
+    let ⟨Z, v, hv, x, hx⟩ := hs (y.comap u.unop.hom)
+    let ⟨q, hq⟩ := Scheme.IsJointlySurjectivePreserving.exists_preimage_snd_triplet_of_prop
+      (f := Scheme.Spec.map v) (g := Scheme.Spec.map u) (P := ⊤) trivial x y hx
+    let e : Scheme.Spec.obj (pullback v u) ≅ pullback (Scheme.Spec.map v) (Scheme.Spec.map u) :=
+      PreservesPullback.iso _ _ _
+    ⟨_, _, ⟨_, _, hv⟩, e.inv.base q, by
+      rw [← hq, ← PreservesPullback.iso_inv_snd, comp_base_apply]; rfl⟩
+  transitive X s t hs ht z :=
+    let ⟨Y, v, hv, y, hy⟩ := hs z
+    let ⟨Z, u, hu, x, hx⟩ := ht v hv y
+    ⟨Z, u ≫ v, ⟨_, _, _, hv, hu, rfl⟩, x, by simp [hx, hy]⟩
 
 open PrimeSpectrum
 
@@ -496,15 +528,5 @@ lemma zariskiTopology_eq_toGrothendieck_zariskiPretopology :
       exact ⟨Scheme.Spec.obj Y, y, Scheme.Spec.map u, ⟨hu⟩, rfl⟩
     · exact fun ⟨hu⟩ ↦ isOpenImmersion_of_mem_standard std hu
     · exact fun _ _ ⟨hu⟩ ↦ ⟨_, _, 𝟙 _, hsu _ hu, by rw [id_comp]⟩
-
--- /-- A lemma to help check the sheaf condition: it suffices to check for the standard cover of
--- `Spec R[1/fⱼ] ⟶ Spec R` where `(f₁, ⋯, fₙ) = R`. -/
--- @[simp] lemma isSheaf_zariski_iff_isSheaf_standard (p : CommRingCat.{u}ᵒᵖᵒᵖ ⥤ Type v) :
---     Presheaf.IsSheaf zariskiTopology.{u} p ↔
---       ∀ (R : CommRingCat.{u}) (s : StandardSystem R), Presieve.IsSheafFor p s.cover := by
---   rw [zariski_eq_toGrothendieck_standard, isSheaf_iff_isSheaf_of_type, Presieve.isSheaf_pretopology]
---   constructor
---   · intro h R S; exact h _ ⟨S, rfl⟩
---   · rintro h X _ ⟨S, rfl⟩; exact h X.unop S
 
 end CommRingCat
