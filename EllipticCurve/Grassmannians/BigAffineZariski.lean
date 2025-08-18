@@ -41,74 +41,129 @@ universe u v
 
 open CategoryTheory Functor Opposite Category Limits
 
-set_option linter.unusedVariables false in
-/-- A type synonym to make a canonical `Algebra` structure where `r • s` is defeq to
-`algebraMap R S r * s`. -/
-def Canon (_R : Type u) (S : Type v) : Type v := S
+-- set_option linter.unusedVariables false in
+-- /-- A type synonym to make a canonical `Algebra` structure where `r • s` is defeq to
+-- `algebraMap R S r * s`. -/
+-- def Canon (_R : Type u) (S : Type v) : Type v := S
 
-namespace Canon
+-- namespace Canon
 
-variable (R : Type u) (S : Type v)
+-- variable (R : Type u) (S : Type v)
 
-/-- A "constructor" to not abuse defeq. -/
-def of (x : S) : Canon R S := x
+-- /-- A "constructor" to not abuse defeq. -/
+-- def of (x : S) : Canon R S := x
 
-/-- A "projection" to not abuse defeq. -/
-def down (x : Canon R S) : S := x
+-- /-- A "projection" to not abuse defeq. -/
+-- def down (x : Canon R S) : S := x
 
-instance [Semiring S] : Semiring (Canon R S) :=
-  inferInstanceAs (Semiring S)
+-- instance [Semiring S] : Semiring (Canon R S) :=
+--   inferInstanceAs (Semiring S)
 
-/-- The ring structure is still the same, it is not affected by how the scalar multiplication is
-defined. -/
-@[simps] def ringEquiv [Semiring S] : Canon R S ≃+* S where
-  toFun := down R S
-  invFun := of R S
-  map_add' _ _ := rfl
-  map_mul' _ _ := rfl
-  left_inv _ := rfl
-  right_inv _ := rfl
+-- /-- The ring structure is still the same, it is not affected by how the scalar multiplication is
+-- defined. -/
+-- @[simps] def ringEquiv [Semiring S] : Canon R S ≃+* S where
+--   toFun := down R S
+--   invFun := of R S
+--   map_add' _ _ := rfl
+--   map_mul' _ _ := rfl
+--   left_inv _ := rfl
+--   right_inv _ := rfl
 
-instance [CommSemiring S] : CommSemiring (Canon R S) :=
-  inferInstanceAs (CommSemiring S)
+-- instance [CommSemiring S] : CommSemiring (Canon R S) :=
+--   inferInstanceAs (CommSemiring S)
 
-instance [Ring S] : Ring (Canon R S) :=
-  inferInstanceAs (Ring S)
+-- instance [Ring S] : Ring (Canon R S) :=
+--   inferInstanceAs (Ring S)
 
-instance [CommRing S] : CommRing (Canon R S) :=
-  inferInstanceAs (CommRing S)
+-- instance [CommRing S] : CommRing (Canon R S) :=
+--   inferInstanceAs (CommRing S)
 
-instance [Field S] : Field (Canon R S) :=
-  inferInstanceAs (Field S)
+-- instance [Field S] : Field (Canon R S) :=
+--   inferInstanceAs (Field S)
 
-/-- The `algebraMap` from `R` to the new `S`. -/
-def toCanon [CommSemiring R] [Semiring S] [Algebra R S] : R →+* Canon R S :=
-  _root_.algebraMap R S
+-- /-- The `algebraMap` from `R` to the new `S`. -/
+-- def toCanon [CommSemiring R] [Semiring S] [Algebra R S] : R →+* Canon R S :=
+--   _root_.algebraMap R S
 
-instance [CommSemiring R] [Semiring S] [Algebra R S] :
-    Algebra R (Canon R S) where
-  algebraMap := toCanon R S
-  smul r x := toCanon R S r * x
-  commutes' r x := Algebra.commutes r (show S from x)
-  smul_def' _ _ := rfl
+-- instance [CommSemiring R] [Semiring S] [Algebra R S] :
+--     Algebra R (Canon R S) where
+--   algebraMap := toCanon R S
+--   smul r x := toCanon R S r * x
+--   commutes' r x := Algebra.commutes r (show S from x)
+--   smul_def' _ _ := rfl
 
-example [CommSemiring R] [CommSemiring S] [Algebra R S] :
-    (algebraMap R (Canon R S)).toAlgebra = inferInstanceAs (Algebra R (Canon R S)) :=
-  rfl
+-- example [CommSemiring R] [CommSemiring S] [Algebra R S] :
+--     (algebraMap R (Canon R S)).toAlgebra = inferInstanceAs (Algebra R (Canon R S)) :=
+--   rfl
 
-/-- Even though the scalar multiplications are not defeq, they are still isomorphic as algebras. -/
-def algEquiv [CommSemiring R] [CommSemiring S] [Algebra R S] :
-    Canon R S ≃ₐ[R] S :=
-  AlgEquiv.ofRingEquiv (f := ringEquiv R S) fun _ ↦ rfl
+-- /-- Even though the scalar multiplications are not defeq, they are still isomorphic as algebras. -/
+-- def algEquiv [CommSemiring R] [CommSemiring S] [Algebra R S] :
+--     Canon R S ≃ₐ[R] S :=
+--   AlgEquiv.ofRingEquiv (f := ringEquiv R S) fun _ ↦ rfl
 
-instance [CommSemiring R] [CommSemiring S] [Algebra R S] (M : Submonoid R) [IsLocalization M S] :
-    IsLocalization M (Canon R S) :=
-  IsLocalization.isLocalization_of_algEquiv M (algEquiv R S).symm
+-- instance [CommSemiring R] [CommSemiring S] [Algebra R S] (M : Submonoid R) [IsLocalization M S] :
+--     IsLocalization M (Canon R S) :=
+--   IsLocalization.isLocalization_of_algEquiv M (algEquiv R S).symm
 
-end Canon
+-- end Canon
 
 
 open AlgebraicGeometry AffineScheme Scheme TensorProduct
+
+namespace RingHom
+
+variable {R : Type u} {S : Type v} [CommRing R] [CommRing S] (f : R →+* S)
+
+@[algebraize RingHom.IsStandardOpenImmersion.toAlgebra]
+def IsStandardOpenImmersion : Prop :=
+  letI := f.toAlgebra
+  ∃ r : R, IsLocalization.Away r S
+
+variable (R S) in
+def _root_.Algebra.IsStandardOpenImmersion [Algebra R S] : Prop :=
+  ∃ r : R, IsLocalization.Away r S
+
+lemma IsStandardOpenImmersion.toAlgebra {f : R →+* S} (hf : f.IsStandardOpenImmersion) :
+  @Algebra.IsStandardOpenImmersion R S _ _ f.toAlgebra := hf
+
+lemma isStandardOpenImmersion_algebraMap [Algebra R S] :
+    (algebraMap R S).IsStandardOpenImmersion ↔ Algebra.IsStandardOpenImmersion R S := by
+  unfold IsStandardOpenImmersion Algebra.IsStandardOpenImmersion
+  congr!
+  exact Algebra.algebra_ext _ _ fun _ ↦ rfl
+
+theorem stableUnderComposition_isStandardOpenImmersion :
+    StableUnderComposition.{u} IsStandardOpenImmersion := by
+  rintro R S T _ _ _ f g ⟨r, hf⟩ ⟨s, hg⟩
+  algebraize [f, g, g.comp f]
+  let s' := (IsLocalization.Away.sec r s).1
+  -- factor this out?
+  have assoc : Associated (algebraMap R S s') s := by
+    unfold s'
+    rw [← IsLocalization.Away.sec_spec, map_pow]
+    exact associated_mul_unit_left _ _ (.pow _ <| IsLocalization.Away.algebraMap_isUnit _)
+  have : IsLocalization.Away (algebraMap R S s') T :=
+    IsLocalization.Away.of_associated assoc.symm
+  exact ⟨r * s', IsLocalization.Away.mul' S T r _⟩
+
+theorem isStableUnderBaseChange_isStandardOpenImmersion :
+    IsStableUnderBaseChange.{u} IsStandardOpenImmersion := by
+  rintro R S R' S' _ _ _ _ _ _ _ _ _ _ _ hp hrs
+  rw [isStandardOpenImmersion_algebraMap] at hrs ⊢
+  obtain ⟨r, hrs⟩ := hrs
+  refine ⟨algebraMap R R' r, ?_⟩
+  have : Algebra.IsPushout R R' S S' := Algebra.IsPushout.symm hp
+  exact IsLocalization.isLocalization_of_algEquiv _ (Algebra.IsPushout.equiv R R' S S')
+
+end RingHom
+/-
+I think it would be easier (and much more reusable) if this was defined as the intersection of three pretopologies:
+
+The one from CategoryTheory.MorphismProperty.pretopology via RingHom.IsStandardOpenImmersion from above.
+Jointly surjective families (on Spec).
+Finite covering families.
+The same setup could later be used to e.g. define the étale (fpqc, fppf, etc.) topology on CommRingCat.{u}ᵒᵖ.
+-/
 
 namespace CommRingCat
 
