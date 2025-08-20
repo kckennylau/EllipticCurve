@@ -226,9 +226,13 @@ variable {C : Type u} {D : Type u₁} [Category.{v} C] [Category.{v₁} D] (F : 
 @[simps!] nonrec def Types.leftExtension : (proj F d).op.LeftExtension P :=
   leftExtension (Types.coproductColimitCocone _) P
 
+@[simps!] nonrec def Types.isPointwiseLeftKanExtension :
+    (Types.leftExtension F d P).IsPointwiseLeftKanExtension :=
+  isPointwiseLeftKanExtension _ _
+
 @[simps!] nonrec def Types.isUniversalLeftExtension :
     (Types.leftExtension F d P).IsUniversal :=
-  isUniversalLeftExtension (Types.coproductColimitCocone _) P
+  isUniversalLeftExtension _ _
 
 end Types
 
