@@ -216,28 +216,82 @@ def isUniversalLeftExtension : (leftExtension coprod P).IsUniversal :=
   Functor.pointwiseLeftKanExtensionIsUniversal' _ _ (kanCocone coprod P)
     (kanCoconeIsColimit coprod P)
 
+instance : (proj F d).op.HasPointwiseLeftKanExtension P :=
+  fun c' ↦ (isPointwiseLeftKanExtension coprod P c').hasPointwiseLeftKanExtensionAt
+
 section Types
 
 /-! # Explicit coproducts for types -/
 
-variable {C : Type u} {D : Type u₁} [Category.{v} C] [Category.{v₁} D] (F : C ⥤ D) (d : D)
+variable {C : Type u} {D : Type u₁} [Category.{v} C] [Category.{v₁} D] {F : C ⥤ D} {d : D}
   (P : (CostructuredArrow F d)ᵒᵖ ⥤ Type (max w v₁))
 
-@[simps!] nonrec def Types.leftExtension : (proj F d).op.LeftExtension P :=
-  leftExtension (Types.coproductColimitCocone _) P
+def Total (X : C) : Type (max w v₁) :=
+  Σ x : F.obj X ⟶ d, P.obj (op (mk x))
 
-@[simps!] nonrec def Types.isPointwiseLeftKanExtension :
-    (Types.leftExtension F d P).IsPointwiseLeftKanExtension :=
-  isPointwiseLeftKanExtension _ _
+namespace Total
 
-@[simps!] nonrec def Types.isUniversalLeftExtension :
-    (Types.leftExtension F d P).IsUniversal :=
-  isUniversalLeftExtension _ _
+variable {P}
+
+@[simps] def mk {X : C} (x : F.obj X ⟶ d) (px : P.obj (op (mk x))) : Total P X := ⟨x, px⟩
+
+@[ext (iff := false)] theorem ext {X : C} {x₁ x₂ : Total P X} (h₁ : x₁.1 = x₂.1)
+    (h₂ : P.map (eqToHom (by rw [h₁])).op x₁.2 = x₂.2) : x₁ = x₂ := by
+  cases x₁; cases x₂; dsimp at h₁; subst h₁; dsimp at h₂; subst h₂; simp
+
+theorem ext_iff {X : C} {x₁ x₂ : Total P X} :
+    x₁ = x₂ ↔ ∃ h : x₁.1 = x₂.1, P.map (eqToHom (by rw [h])).op x₁.2 = x₂.2 :=
+  ⟨(by subst ·; simp), fun ⟨h₁, h₂⟩ ↦ ext h₁ h₂⟩
+
+theorem ext_iff' {X : C} {x₁ x₂ : Total P X} :
+    x₁ = x₂ ↔ ∃ h : x₁.1 = x₂.1, x₁.2 = P.map (eqToHom (by rw [h])).op x₂.2 :=
+  ⟨(by subst ·; simp), fun ⟨h₁, h₂⟩ ↦ (ext h₁.symm h₂.symm).symm⟩
+
+@[simps!] def comap {X Y : C} (f : X ⟶ Y) (t : Total P Y) : Total P X :=
+  mk (F.map f ≫ t.1) (P.map (homMk f).op t.2)
+
+lemma comap_id {X : C} : comap (P := P) (𝟙 X) = id := by
+  refine funext fun p ↦ ext (by simp) ?_
+  change P.map _ (P.map _ p.snd) = p.snd
+  rw [← FunctorToTypes.map_comp_apply, ← op_comp]
+  conv => enter [2]; exact (FunctorToTypes.map_id_apply P p.snd).symm
+  exact congr_arg₂ _ (congr_arg _ (by simp)) rfl
+
+lemma comap_comp {X Y Z : C} {f : X ⟶ Y} {g : Y ⟶ Z} :
+    comap (P := P) (f ≫ g) = comap f ∘ comap g := by
+  refine funext fun p ↦ ext (by simp) ?_
+  change P.map _ (P.map _ p.snd) = P.map _ (P.map _ p.snd)
+  simp_rw [← FunctorToTypes.map_comp_apply, ← op_comp]
+  exact congr_arg₂ _ (congr_arg _ (by simp)) rfl
+
+end Total
+
+@[simps] def Types.extension : Cᵒᵖ ⥤ Type (max w v₁) where
+  obj X := Total P X.unop
+  map f := Total.comap f.unop
+  map_id _ := Total.comap_id
+  map_comp _ _ := Total.comap_comp
+
+def Types.extensionUnit : P ⟶ (proj F d).op ⋙ Types.extension P where
+  app X p := .mk X.unop.hom (P.map (eqToHom (by rw [← eq_mk])).op p)
+  naturality X Y f := funext fun p ↦ Total.ext (by simp) <| by
+    dsimp
+    rw [← Quiver.Hom.op_unop f]
+    simp_rw [← FunctorToTypes.map_comp_apply, ← op_id, ← op_comp]
+    exact congr_arg₂ _ (congr_arg _ (by simp)) rfl
+
+-- @[simps!] nonrec def Types.leftExtension : (proj F d).op.LeftExtension P :=
+--   leftExtension (Types.coproductColimitCocone _) P
+
+-- @[simps!] nonrec def Types.isPointwiseLeftKanExtension :
+--     (Types.leftExtension F d P).IsPointwiseLeftKanExtension :=
+--   isPointwiseLeftKanExtension _ _
+
+-- @[simps!] nonrec def Types.isUniversalLeftExtension :
+--     (Types.leftExtension F d P).IsUniversal :=
+--   isUniversalLeftExtension _ _
 
 end Types
-
-instance : (proj F d).op.HasPointwiseLeftKanExtension P :=
-  fun c' ↦ (isPointwiseLeftKanExtension coprod P c').hasPointwiseLeftKanExtensionAt
 
 -- noncomputable example := (proj F d).op.pointwiseLeftKanExtension P
 
