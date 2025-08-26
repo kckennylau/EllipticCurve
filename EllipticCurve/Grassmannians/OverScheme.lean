@@ -281,10 +281,6 @@ instance hasLimitsOfShape_all_structuredArrow_op
     ∀ d : Dᵒᵖ, HasLimitsOfShape (StructuredArrow d S.op) T :=
   fun _ ↦ hasLimitsOfShape_structuredArrow_op
 
--- MOVE
-instance : Scheme.Spec.IsDenseSubsite zariskiTopology Scheme.zariskiTopology where
-  functorPushforward_mem_iff {X S} := by simp [zariskiTopology]
-
 variable {𝒮 : Scheme.{u}}
 
 theorem affine_subcanonical : Presheaf.IsSheaf zariskiTopology (Scheme.Spec.op ⋙ yoneda.obj 𝒮) :=
@@ -292,8 +288,8 @@ theorem affine_subcanonical : Presheaf.IsSheaf zariskiTopology (Scheme.Spec.op �
     (Scheme.zariskiTopology.yoneda.obj 𝒮)).cond
 
 @[simps!] noncomputable def sheafOfOverScheme
-    (S : Sheaf (OverScheme.zariskiTopology 𝒮) (Type u)) :
-    Sheaf zariskiTopology (Type u) :=
+    (S : Sheaf (OverScheme.zariskiTopology 𝒮) (Type (max w u))) :
+    Sheaf zariskiTopology (Type (max w u)) :=
   CostructuredArrow.sheafOfInduced _ S affine_subcanonical
 
 end CommRingCat

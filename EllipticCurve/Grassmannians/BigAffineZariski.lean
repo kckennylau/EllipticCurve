@@ -314,6 +314,9 @@ induced topology from the Zariski topology on the category of schemes. -/
 def zariskiTopology : GrothendieckTopology CommRingCat.{u}ᵒᵖ :=
   inducedTopology Scheme.Spec Scheme.zariskiTopology
 
+instance : Scheme.Spec.IsDenseSubsite zariskiTopology Scheme.zariskiTopology where
+  functorPushforward_mem_iff {X S} := by simp [zariskiTopology]
+
 /-- The category of sheaves on `CommRingCatᵒᵖ` (using the pullback of the Zariski topology via
 `Spec`) is equivalent to the category of sheaves on `Scheme` under the Zariski topology.
 
