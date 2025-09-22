@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau
 -/
 
-import EllipticCurve.Grassmannians.EqualizerCorepresentable
+import EllipticCurve.CategoryTheory.EqualizerCorepresentable
 import EllipticCurve.Lemmas
 import Mathlib.Algebra.Category.Ring.Under.Basic
 import Mathlib.CategoryTheory.Comma.Over.Basic

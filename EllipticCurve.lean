@@ -1,6 +1,10 @@
+import EllipticCurve.AlgebraicGeometry.BigAffineZariski
+import EllipticCurve.AlgebraicGeometry.OverScheme
 import EllipticCurve.Basic
+import EllipticCurve.CategoryTheory.EqualizerCorepresentable
+import EllipticCurve.CategoryTheory.FiberColimit
+import EllipticCurve.CategoryTheory.PresheafCostructured
 import EllipticCurve.Grassmannians.Basic
-import EllipticCurve.Grassmannians.EqualizerCorepresentable
 import EllipticCurve.Lemmas
 import EllipticCurve.ProjectiveSpace.Basic
 import EllipticCurve.ProjectiveSpace.TensorProduct.BaseChange

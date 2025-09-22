@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau
 -/
 
-import EllipticCurve.Grassmannians.BigAffineZariski
-import EllipticCurve.Grassmannians.PresheafCostructured
+import EllipticCurve.AlgebraicGeometry.BigAffineZariski
+import EllipticCurve.CategoryTheory.PresheafCostructured
 
 /-!
 # The Category of Commutative Rings Over a Scheme
