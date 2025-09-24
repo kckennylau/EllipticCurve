@@ -253,18 +253,34 @@ namespace CommRingCat
 abbrev OverScheme (𝒮 : Scheme.{u}) : Type (u + 1) :=
   CostructuredArrow Scheme.Spec 𝒮
 
-instance : AffineScheme.Spec.IsEquivalence where
+-- mathlib #29927
+instance {C : Type*} [Category C] {D : Type*} [Category D]
+    {F : C ⥤ D} [F.Faithful] [F.Full] [F.EssSurj] : F.IsEquivalence where
 
 /-- The category of commutative rings under `R` is equivalent to
 the opposite category of affine schemes over `Spec R`. -/
-noncomputable def underEquivOverSpec (R : CommRingCat.{u}) :
-    (CostructuredArrow AffineScheme.Spec (AffineScheme.of (Spec R)))ᵒᵖ ≌ Under R := by
-  refine (costructuredArrowOpEquivalence _ _).trans ?_
-  unfold Under
-  -- #synth AffineScheme.Spec.op.IsEquivalence
-  -- #check pre (op (AffineScheme.of (Spec R)))
-  sorry
+noncomputable def costructuredArrow_affineScheme_op_equiv_under (R : CommRingCat.{u}) :
+    (CostructuredArrow AffineScheme.Spec (AffineScheme.of (Spec R)))ᵒᵖ ≌ Under R :=
+  let F₁ := StructuredArrow.pre (op (AffineScheme.of (Spec R))) AffineScheme.Spec.op (𝟭 _)
+  let F₂ :
+      StructuredArrow R (𝟭 CommRingCat) ⥤
+      StructuredArrow (AffineScheme.Spec.rightOp.obj R) (𝟭 AffineSchemeᵒᵖ) :=
+    StructuredArrow.map₂ (F := AffineScheme.Spec.rightOp) (𝟙 _) (𝟙 _)
+  (costructuredArrowOpEquivalence _ _).trans (F₁ ⋙ F₂.asEquivalence.inverse).asEquivalence
 
+/-- Equivalence between `CostructuredArrow` and that for the essential image subcategory. -/
+noncomputable def costructuredArrow_equiv_essImageSubcategory (R : CommRingCat.{u}) :
+    CostructuredArrow AffineScheme.Spec (AffineScheme.of (Spec R)) ≌
+    OverScheme (Spec R) :=
+  (CostructuredArrow.map₂ (F := 𝟭 CommRingCatᵒᵖ) (G := AffineScheme.forgetToScheme)
+    (𝟙 _) (𝟙 _)).asEquivalence
+
+/-- The category of commutative rings under `R` is equivalent to
+the opposite category of affine schemes over `Spec R`. -/
+noncomputable def overScheme_op_equiv_under (R : CommRingCat.{u}) :
+    (OverScheme (Spec R))ᵒᵖ ≌ Under R :=
+  (costructuredArrow_equiv_essImageSubcategory R).inverse.asEquivalence.op.trans
+    (costructuredArrow_affineScheme_op_equiv_under R)
 
 namespace OverScheme
 
