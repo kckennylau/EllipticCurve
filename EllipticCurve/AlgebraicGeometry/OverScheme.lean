@@ -268,8 +268,8 @@ noncomputable def costructuredArrow_affineScheme_op_equiv_under (R : CommRingCat
     StructuredArrow.map₂ (F := AffineScheme.Spec.rightOp) (𝟙 _) (𝟙 _)
   (costructuredArrowOpEquivalence _ _).trans (F₁ ⋙ F₂.asEquivalence.inverse).asEquivalence
 
-/-- Equivalence between `CostructuredArrow` and that for the essential image subcategory. -/
-noncomputable def costructuredArrow_equiv_essImageSubcategory (R : CommRingCat.{u}) :
+/-- Equivalence between `CostructuredArrow` for `AffineScheme`, and `OverScheme`. -/
+noncomputable def costructuredArrow_affineScheme_equiv_overScheme (R : CommRingCat.{u}) :
     CostructuredArrow AffineScheme.Spec (AffineScheme.of (Spec R)) ≌
     OverScheme (Spec R) :=
   (CostructuredArrow.map₂ (F := 𝟭 CommRingCatᵒᵖ) (G := AffineScheme.forgetToScheme)
@@ -279,7 +279,7 @@ noncomputable def costructuredArrow_equiv_essImageSubcategory (R : CommRingCat.{
 the opposite category of affine schemes over `Spec R`. -/
 noncomputable def overScheme_op_equiv_under (R : CommRingCat.{u}) :
     (OverScheme (Spec R))ᵒᵖ ≌ Under R :=
-  (costructuredArrow_equiv_essImageSubcategory R).inverse.asEquivalence.op.trans
+  (costructuredArrow_affineScheme_equiv_overScheme R).inverse.asEquivalence.op.trans
     (costructuredArrow_affineScheme_op_equiv_under R)
 
 namespace OverScheme
