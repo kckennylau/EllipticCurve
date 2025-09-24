@@ -6,6 +6,7 @@ Authors: Kenny Lau
 
 import EllipticCurve.AlgebraicGeometry.BigAffineZariski
 import EllipticCurve.CategoryTheory.PresheafCostructured
+import Mathlib.AlgebraicGeometry.AffineScheme
 
 /-!
 # The Category of Commutative Rings Over a Scheme
@@ -247,8 +248,23 @@ end CategoryTheory.CostructuredArrow
 
 namespace CommRingCat
 
+-- this shouldn't be in CommRingCat (?), but we put it here for now
+/-- The category of affine schemes over a fixed base scheme `𝒮`. -/
 abbrev OverScheme (𝒮 : Scheme.{u}) : Type (u + 1) :=
   CostructuredArrow Scheme.Spec 𝒮
+
+instance : AffineScheme.Spec.IsEquivalence where
+
+/-- The category of commutative rings under `R` is equivalent to
+the opposite category of affine schemes over `Spec R`. -/
+noncomputable def underEquivOverSpec (R : CommRingCat.{u}) :
+    (CostructuredArrow AffineScheme.Spec (AffineScheme.of (Spec R)))ᵒᵖ ≌ Under R := by
+  refine (costructuredArrowOpEquivalence _ _).trans ?_
+  unfold Under
+  -- #synth AffineScheme.Spec.op.IsEquivalence
+  -- #check pre (op (AffineScheme.of (Spec R)))
+  sorry
+
 
 namespace OverScheme
 
