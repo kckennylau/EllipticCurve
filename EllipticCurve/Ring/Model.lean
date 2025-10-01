@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau
 -/
 
-import EllipticCurve.ProjectiveSpace.Basic
+import EllipticCurve.ProjectiveSpace.Functor
 import Mathlib.AlgebraicGeometry.EllipticCurve.Affine.Basic
 
 /-!

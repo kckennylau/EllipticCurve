@@ -155,7 +155,7 @@ noncomputable def lequivOfChart :
 
 @[simp] lemma lequivOfChart_apply :
     lequivOfChart N hn (Submodule.Quotient.mk (x i)) = Pi.single i 1 := by
-  rw [← lequivOfChart_symm_apply_single_one, LinearEquiv.apply_symm_apply]
+  rw [← lequivOfChart_symm_apply_single_one hn, LinearEquiv.apply_symm_apply]
 
 @[simp] lemma lequivOfChart_apply_apply :
     lequivOfChart N hn (Submodule.Quotient.mk (x i)) j = if j = i then 1 else 0 := by
