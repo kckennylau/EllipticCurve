@@ -6,7 +6,8 @@ import EllipticCurve.CategoryTheory.FiberColimit
 import EllipticCurve.CategoryTheory.PresheafCostructured
 import EllipticCurve.Grassmannians.Basic
 import EllipticCurve.Lemmas
-import EllipticCurve.ProjectiveSpace.Basic
+import EllipticCurve.ProjectiveSpace.Functor
+import EllipticCurve.ProjectiveSpace.Scheme
 import EllipticCurve.ProjectiveSpace.TensorProduct.BaseChange
 import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricMap
 import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricPower

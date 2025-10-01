@@ -317,6 +317,10 @@ instance hasLimitsOfShape_all_structuredArrow_op
 
 variable {𝒮 : Scheme.{u}}
 
+-- MOVE
+instance : Scheme.Spec.IsDenseSubsite zariskiTopology Scheme.zariskiTopology where
+  functorPushforward_mem_iff {X S} := by simp [zariskiTopology]
+
 theorem affine_subcanonical : Presheaf.IsSheaf zariskiTopology (Scheme.Spec.op ⋙ yoneda.obj 𝒮) :=
   ((Scheme.Spec.sheafPushforwardContinuous (Type u) zariskiTopology Scheme.zariskiTopology).obj
     (Scheme.zariskiTopology.yoneda.obj 𝒮)).cond
