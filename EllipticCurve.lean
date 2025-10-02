@@ -10,6 +10,8 @@ import EllipticCurve.ProjectiveSpace.Functor
 import EllipticCurve.ProjectiveSpace.HomogeneousLocalizationMvPolynomial
 import EllipticCurve.ProjectiveSpace.Scheme
 import EllipticCurve.ProjectiveSpace.TensorProduct.BaseChange
+import EllipticCurve.ProjectiveSpace.TensorProduct.GradedAlgebra
+import EllipticCurve.ProjectiveSpace.TensorProduct.Proj
 import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricMap
 import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricPower
 import EllipticCurve.Ring.Model

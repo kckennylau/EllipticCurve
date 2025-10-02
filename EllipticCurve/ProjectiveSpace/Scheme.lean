@@ -66,4 +66,8 @@ namespace Proj
 
 end Proj
 
+-- /-- `ℙ(n; Spec R)` is isomorphic to `Proj R[n]`. -/
+-- def SpecIso (R : Type u) [CommRing R] : ℙ(n; Spec (.of R)) ≅ Proj (homogeneousSubmodule n R) :=
+--   _
+
 end AlgebraicGeometry
