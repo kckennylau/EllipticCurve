@@ -6,6 +6,7 @@ import EllipticCurve.CategoryTheory.FiberColimit
 import EllipticCurve.CategoryTheory.PresheafCostructured
 import EllipticCurve.Grassmannians.Basic
 import EllipticCurve.Lemmas
+import EllipticCurve.ProjectiveSpace.AlgebraHomogeneousLocalization
 import EllipticCurve.ProjectiveSpace.Functor
 import EllipticCurve.ProjectiveSpace.HomogeneousLocalizationMvPolynomial
 import EllipticCurve.ProjectiveSpace.Scheme

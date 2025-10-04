@@ -360,6 +360,9 @@ instance : SetLike.GradedMonoid (fun n ↦ (𝒜 n).baseChange S) where
 --     (baseChangeAlgEquiv (R := R) (S := S) (A := fun i ↦ 𝒜 i)).trans <|
 --       algEquivOfComponents (fun i ↦ .ofBijective ((𝒜 i).toBaseChange S) _)  _  _
 
+noncomputable def baseChangeLEquiv (n : ι) : S ⊗[R] 𝒜 n ≃ₗ[S] (𝒜 n).baseChange S :=
+  LinearEquiv.ofBijective _ ((Decomposition.isInternal 𝒜).toBaseChange_bijective S n)
+
 noncomputable instance : GradedAlgebra (fun n ↦ (𝒜 n).baseChange S) :=
   ((Decomposition.isInternal 𝒜).baseChange S).gradedAlgebra
 
