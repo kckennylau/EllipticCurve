@@ -5,7 +5,7 @@ Authors: Kenny Lau
 -/
 
 import EllipticCurve.ProjectiveSpace.TensorProduct.GradedAlgebra
-import EllipticCurve.ProjectiveSpace.AlgebraHomogeneousLocalization
+import EllipticCurve.ProjectiveSpace.TensorProduct.ProjMap
 import Mathlib.AlgebraicGeometry.ProjectiveSpectrum.Basic
 import Mathlib.AlgebraicGeometry.Pullbacks
 import Mathlib.LinearAlgebra.TensorProduct.Finiteness
@@ -17,34 +17,6 @@ In this file we show `Proj (S ⊗[R] 𝒜) ≅ Spec S ×_R Proj 𝒜` where `�
 -/
 
 universe u
-
-def HomogeneousLocalization.lof {R A : Type*} [CommRing R] [CommRing A] [Algebra R A]
-    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι] (𝒜 : ι → Submodule R A) [GradedAlgebra 𝒜]
-    (S : Submonoid A) {i : ι} (d : 𝒜 i) (hd : ↑d ∈ S) :
-    𝒜 i →ₗ[R] HomogeneousLocalization 𝒜 S where
-  toFun x := mk ⟨i, x, d, hd⟩
-  map_add' x y := by ext; simp [Localization.add_mk_self]
-  map_smul' c x := by ext; simp [Localization.smul_mk]
-
-nonrec def HomogeneousLocalization.Away.lof {R A : Type*} [CommRing R] [CommRing A] [Algebra R A]
-    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι] (𝒜 : ι → Submodule R A) [GradedAlgebra 𝒜]
-    {i : ι} {f : A} (hf : f ∈ 𝒜 i) (n : ℕ) :
-    𝒜 (n • i) →ₗ[R] HomogeneousLocalization.Away 𝒜 f :=
-  lof _ _ ⟨f ^ n, SetLike.pow_mem_graded _ hf⟩ ⟨n, rfl⟩
-
-@[simp] lemma HomogeneousLocalization.Away.val_lof
-    {R A : Type*} [CommRing R] [CommRing A] [Algebra R A]
-    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι] (𝒜 : ι → Submodule R A) [GradedAlgebra 𝒜]
-    {i : ι} {f : A} (hf : f ∈ 𝒜 i) (n : ℕ) (a : 𝒜 (n • i)) :
-    (lof _ hf n a).val = .mk a ⟨f ^ n, n, rfl⟩ := rfl
-
-lemma HomogeneousLocalization.Away.lof_surjective
-    {R A : Type*} [CommRing R] [CommRing A] [Algebra R A]
-    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι] (𝒜 : ι → Submodule R A) [GradedAlgebra 𝒜]
-    {i : ι} {f : A} (hf : f ∈ 𝒜 i) (x : Away 𝒜 f) :
-    ∃ (n : ℕ) (a : 𝒜 (n • i)), lof _ hf n a = x := by
-  obtain ⟨n, a, ha, rfl⟩ := x.mk_surjective _ hf
-  exact ⟨n, ⟨a, ha⟩, rfl⟩
 
 open TensorProduct in
 def AlgHom.liftBaseChange {R S A B : Type*}
@@ -76,102 +48,6 @@ open TensorProduct in
       (AlgHom.restrictScalars R g).comp Algebra.TensorProduct.includeRight) :
     f = g :=
   ext (Subsingleton.elim _ _) h
-
--- not `@[ext]` because `A` cannot be inferred.
-theorem IsLocalization.algHom_ext {R A L B : Type*}
-    [CommSemiring R] [CommSemiring A] [CommSemiring L] [CommSemiring B]
-    (W : Submonoid A) [Algebra A L] [IsLocalization W L]
-    [Algebra R A] [Algebra R L] [IsScalarTower R A L] [Algebra R B]
-    {f g : L →ₐ[R] B} (h : f.comp (Algebra.algHom R A L) = g.comp (Algebra.algHom R A L)) :
-    f = g :=
-  AlgHom.coe_ringHom_injective <| IsLocalization.ringHom_ext W <| RingHom.ext <| AlgHom.ext_iff.mp h
-
-@[ext high] theorem Localization.algHom_ext {R A B : Type*}
-    [CommSemiring R] [CommSemiring A] [CommSemiring B] [Algebra R A] [Algebra R B] (W : Submonoid A)
-    {f g : Localization W →ₐ[R] B}
-    (h : f.comp (Algebra.algHom R A _) = g.comp (Algebra.algHom R A _)) :
-    f = g :=
-  IsLocalization.algHom_ext W h
-
-open HomogeneousLocalization NumDenSameDeg in
-def HomogeneousLocalization.mapₐ {R R₁ R₂ A₁ A₂ : Type*}
-    [CommRing R] [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂]
-    [Algebra R R₁] [Algebra R₁ A₁] [Algebra R A₁] [IsScalarTower R R₁ A₁]
-    [Algebra R R₂] [Algebra R₂ A₂] [Algebra R A₂] [IsScalarTower R R₂ A₂]
-    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι]
-    {𝒜₁ : ι → Submodule R₁ A₁} [GradedAlgebra 𝒜₁]
-    {𝒜₂ : ι → Submodule R₂ A₂} [GradedAlgebra 𝒜₂]
-    {𝒮₁ : Submonoid A₁} {𝒮₂ : Submonoid A₂}
-    (g : A₁ →ₐ[R] A₂) (comap_le : 𝒮₁ ≤ Submonoid.comap g 𝒮₂)
-    (hg : ∀ ⦃i⦄, ∀ a ∈ 𝒜₁ i, g a ∈ 𝒜₂ i) :
-    HomogeneousLocalization 𝒜₁ 𝒮₁ →ₐ[R] HomogeneousLocalization 𝒜₂ 𝒮₂ where
-  toFun := Quotient.map'
-    (fun x ↦ ⟨x.deg, ⟨_, hg _ x.num.2⟩, ⟨_, hg _ x.den.2⟩, comap_le x.den_mem⟩)
-    fun x y (e : x.embedding = y.embedding) ↦ by
-      apply_fun IsLocalization.map (Localization 𝒮₂) (g : A₁ →+* A₂) comap_le at e
-      simp_rw [HomogeneousLocalization.NumDenSameDeg.embedding, Localization.mk_eq_mk',
-        IsLocalization.map_mk', ← Localization.mk_eq_mk'] at e
-      exact e
-  map_add' := Quotient.ind₂' fun x y ↦ by
-    simp only [← mk_add, Quotient.map'_mk'', num_add, map_add, map_mul, den_add]; rfl
-  map_mul' := Quotient.ind₂' fun x y ↦ by
-    simp only [← mk_mul, Quotient.map'_mk'', num_mul, map_mul, den_mul]; rfl
-  map_zero' := by simp only [← mk_zero (𝒜 := 𝒜₁), Quotient.map'_mk'', deg_zero,
-    num_zero, ZeroMemClass.coe_zero, map_zero, den_zero, map_one]; rfl
-  map_one' := by simp only [← mk_one (𝒜 := 𝒜₁), Quotient.map'_mk'',
-    num_one, den_one, map_one]; rfl
-  commutes' r := by ext; simp [fromZeroRingHom]
-
-@[simp] lemma HomogeneousLocalization.mapₐ_mk {R R₁ R₂ A₁ A₂ : Type*}
-    [CommRing R] [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂]
-    [Algebra R R₁] [Algebra R₁ A₁] [Algebra R A₁] [IsScalarTower R R₁ A₁]
-    [Algebra R R₂] [Algebra R₂ A₂] [Algebra R A₂] [IsScalarTower R R₂ A₂]
-    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι]
-    {𝒜₁ : ι → Submodule R₁ A₁} [GradedAlgebra 𝒜₁]
-    {𝒜₂ : ι → Submodule R₂ A₂} [GradedAlgebra 𝒜₂]
-    {𝒮₁ : Submonoid A₁} {𝒮₂ : Submonoid A₂}
-    (g : A₁ →ₐ[R] A₂) (comap_le : 𝒮₁ ≤ Submonoid.comap g 𝒮₂)
-    (hg : ∀ ⦃i⦄, ∀ a ∈ 𝒜₁ i, g a ∈ 𝒜₂ i)
-    (c : NumDenSameDeg 𝒜₁ 𝒮₁) :
-    HomogeneousLocalization.mapₐ g comap_le hg (mk c) =
-    mk ⟨c.deg, ⟨_, hg _ c.num.2⟩, ⟨_, hg _ c.den.2⟩, comap_le c.den_mem⟩ := rfl
-
-def HomogeneousLocalization.Away.mapₐ {R R₁ R₂ A₁ A₂ : Type*}
-    [CommRing R] [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂]
-    [Algebra R R₁] [Algebra R₁ A₁] [Algebra R A₁] [IsScalarTower R R₁ A₁]
-    [Algebra R R₂] [Algebra R₂ A₂] [Algebra R A₂] [IsScalarTower R R₂ A₂]
-    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι]
-    {𝒜₁ : ι → Submodule R₁ A₁} [GradedAlgebra 𝒜₁]
-    {𝒜₂ : ι → Submodule R₂ A₂} [GradedAlgebra 𝒜₂]
-    {f₁ : A₁} {f₂ : A₂} (g : A₁ →ₐ[R] A₂) (hg : ∀ ⦃i⦄, ∀ a ∈ 𝒜₁ i, g a ∈ 𝒜₂ i)
-    (hgf : g f₁ = f₂) :
-    HomogeneousLocalization.Away 𝒜₁ f₁ →ₐ[R] HomogeneousLocalization.Away 𝒜₂ f₂ :=
-  HomogeneousLocalization.mapₐ g (Submonoid.powers_le.mpr ⟨1, by simp [hgf]⟩) hg
-
-@[simp] lemma HomogeneousLocalization.Away.mapₐ_mk {R R₁ R₂ A₁ A₂ : Type*}
-    [CommRing R] [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂]
-    [Algebra R R₁] [Algebra R₁ A₁] [Algebra R A₁] [IsScalarTower R R₁ A₁]
-    [Algebra R R₂] [Algebra R₂ A₂] [Algebra R A₂] [IsScalarTower R R₂ A₂]
-    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι]
-    {𝒜₁ : ι → Submodule R₁ A₁} [GradedAlgebra 𝒜₁]
-    {𝒜₂ : ι → Submodule R₂ A₂} [GradedAlgebra 𝒜₂]
-    {f₁ : A₁} {f₂ : A₂} (g : A₁ →ₐ[R] A₂) (hg : ∀ ⦃i⦄, ∀ a ∈ 𝒜₁ i, g a ∈ 𝒜₂ i)
-    (hgf : g f₁ = f₂) {d : ι} (hf : f₁ ∈ 𝒜₁ d) (n : ℕ) (a : A₁) (ha : a ∈ 𝒜₁ (n • d)) :
-    mapₐ g hg hgf (.mk _ hf n a ha) = .mk _ (hgf ▸ hg _ hf) n (g a) (hg _ ha) := by
-  simp [mapₐ, Away.mk, hgf]
-
-@[simp] lemma HomogeneousLocalization.Away.mapₐ_lof {R R₁ R₂ A₁ A₂ : Type*}
-    [CommRing R] [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂]
-    [Algebra R R₁] [Algebra R₁ A₁] [Algebra R A₁] [IsScalarTower R R₁ A₁]
-    [Algebra R R₂] [Algebra R₂ A₂] [Algebra R A₂] [IsScalarTower R R₂ A₂]
-    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι]
-    {𝒜₁ : ι → Submodule R₁ A₁} [GradedAlgebra 𝒜₁]
-    {𝒜₂ : ι → Submodule R₂ A₂} [GradedAlgebra 𝒜₂]
-    {d : ι} {f₁ : A₁} (hf : f₁ ∈ 𝒜₁ d) {f₂ : A₂}
-    (g : A₁ →ₐ[R] A₂) (hg : ∀ ⦃i⦄, ∀ a ∈ 𝒜₁ i, g a ∈ 𝒜₂ i)
-    (hgf : g f₁ = f₂) (n : ℕ) (a : 𝒜₁ (n • d)) :
-    mapₐ g hg hgf (lof _ hf n a) = lof _ (hgf ▸ hg _ hf) n ⟨g a, hg _ a.2⟩ :=
-  mapₐ_mk _ _ _ hf _ _ _
 
 section degree
 
