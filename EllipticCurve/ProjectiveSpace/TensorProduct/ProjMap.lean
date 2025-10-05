@@ -10,6 +10,8 @@ import Mathlib.AlgebraicGeometry.ProjectiveSpectrum.Basic
 /-! # Functoriality of Proj
 -/
 
+universe u₁ u₂ u v
+
 -- not `@[ext]` because `A` cannot be inferred.
 theorem IsLocalization.algHom_ext {R A L B : Type*}
     [CommSemiring R] [CommSemiring A] [CommSemiring L] [CommSemiring B]
@@ -26,8 +28,6 @@ theorem IsLocalization.algHom_ext {R A L B : Type*}
     f = g :=
   IsLocalization.algHom_ext W h
 
-universe u v
-
 @[simp] lemma Localization.localRingHom_mk {R P : Type*} [CommSemiring R] [CommSemiring P]
     (I : Ideal R) [I.IsPrime] (J : Ideal P) [J.IsPrime] (f : R →+* P) (hIJ : I = Ideal.comap f J)
     (x : R) (y : I.primeCompl) :
@@ -35,16 +35,57 @@ universe u v
       Localization.mk (f x) ⟨f y, by aesop⟩ := by
   simp [mk_eq_mk', localRingHom_mk']
 
-lemma HomogeneousIdeal.toIdeal_le_toIdeal_iff {ι σ A : Type*} [Semiring A] [SetLike σ A]
+namespace HomogeneousIdeal
+
+lemma toIdeal_le_toIdeal_iff {ι σ A : Type*} [Semiring A] [SetLike σ A]
     [AddSubmonoidClass σ A] (𝒜 : ι → σ) [DecidableEq ι] [AddMonoid ι] [GradedRing 𝒜]
     {I J : HomogeneousIdeal 𝒜} : I.toIdeal ≤ J.toIdeal ↔ I ≤ J := Iff.rfl
 
-variable {R : Type u} {A₁ A₂ : Type v} [CommRing R] [CommRing A₁] [CommRing A₂]
-  [Algebra R A₁] [Algebra R A₂]
-  (𝒜₁ : ℕ → Submodule R A₁) (𝒜₂ : ℕ → Submodule R A₂)
+variable {ι σ A : Type*} [Semiring A]
+  [DecidableEq ι] [AddCommMonoid ι] [PartialOrder ι] [CanonicallyOrderedAdd ι]
+  [SetLike σ A] [AddSubmonoidClass σ A] (𝒜 : ι → σ) [GradedRing 𝒜]
 
-structure GradedAlgHom extends A₁ →ₐ[R] A₂ where
-  map_mem' : ∀ ⦃n a⦄, a ∈ 𝒜₁ n → toAlgHom a ∈ 𝒜₂ n
+lemma mem_irrelevant_of_mem {x : A} {i : ι} (hi : 0 < i) (hx : x ∈ 𝒜 i) :
+    x ∈ irrelevant 𝒜 := by
+  rw [mem_irrelevant_iff, GradedRing.proj_apply, DirectSum.decompose_of_mem _ hx,
+    DirectSum.of_eq_of_ne _ _ _ (by aesop), ZeroMemClass.coe_zero]
+
+/-- `irrelevant 𝒜 = ⨁_{i>0} 𝒜ᵢ` -/
+lemma irrelevant_eq_iSup : (irrelevant 𝒜).toAddSubmonoid = ⨆ i > 0, .ofClass (𝒜 i) := by
+  refine le_antisymm (fun x hx ↦ ?_) <| iSup₂_le fun i hi x hx ↦ mem_irrelevant_of_mem _ hi hx
+  classical rw [← DirectSum.sum_support_decompose 𝒜 x]
+  refine sum_mem fun j hj ↦ ?_
+  by_cases hj₀ : j = 0
+  · classical exact (DFinsupp.mem_support_iff.mp hj <| hj₀ ▸ (by simpa using hx)).elim
+  · exact AddSubmonoid.mem_iSup_of_mem j <| AddSubmonoid.mem_iSup_of_mem (pos_of_ne_zero hj₀) <|
+      Subtype.prop _
+
+lemma irrelevant_toAddSubmonoid_le {P : AddSubmonoid A} :
+    (irrelevant 𝒜).toAddSubmonoid ≤ P ↔ ∀ i > 0, .ofClass (𝒜 i) ≤ P := by
+  rw [irrelevant_eq_iSup, iSup₂_le_iff]
+
+lemma irrelevant_toIdeal_le {I : Ideal A} :
+    (irrelevant 𝒜).toIdeal ≤ I ↔ ∀ i > 0, .ofClass (𝒜 i) ≤ I.toAddSubmonoid :=
+  irrelevant_toAddSubmonoid_le _
+
+lemma irrelevant_le {P : HomogeneousIdeal 𝒜} :
+    irrelevant 𝒜 ≤ P ↔ ∀ i > 0, .ofClass (𝒜 i) ≤ P.toAddSubmonoid :=
+  irrelevant_toIdeal_le _
+
+end HomogeneousIdeal
+
+
+section gradedalghom
+
+variable {R R₁ R₂ A₁ A₂ ι : Type*}
+  [CommRing R] [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂]
+  [Algebra R₁ A₁] [Algebra R₂ A₂]
+  (𝒜₁ : ι → Submodule R₁ A₁) (𝒜₂ : ι → Submodule R₂ A₂)
+
+/-- Here we will completely ignore the algebra structure. In the Mathlib PR's this will say
+`GradedRingHom`. -/
+structure GradedAlgHom extends A₁ →+* A₂ where
+  map_mem' : ∀ ⦃n a⦄, a ∈ 𝒜₁ n → toRingHom a ∈ 𝒜₂ n
 
 @[inherit_doc]
 notation:25 𝒜₁ " →ᵍᵃ " 𝒜₂ => GradedAlgHom 𝒜₁ 𝒜₂
@@ -53,35 +94,36 @@ namespace GradedAlgHom
 
 variable {𝒜₁ 𝒜₂}
 
-theorem toAlgHom_injective : Function.Injective (toAlgHom : (𝒜₁ →ᵍᵃ 𝒜₂) → (A₁ →ₐ[R] A₂)) := by
+theorem toRingHom_injective : Function.Injective (toRingHom : (𝒜₁ →ᵍᵃ 𝒜₂) → (A₁ →+* A₂)) := by
   rintro ⟨_⟩ _ h
   congr
 
 instance funLike : FunLike (𝒜₁ →ᵍᵃ 𝒜₂) A₁ A₂ where
   coe f := f.toFun
-  coe_injective' _ _ h := toAlgHom_injective <| AlgHom.coe_fn_injective h
+  coe_injective' _ _ h := toRingHom_injective <| RingHom.ext (congr($h ·))
 
-instance algHomClass : AlgHomClass (𝒜₁ →ᵍᵃ 𝒜₂) R A₁ A₂ where
+instance ringHomClass : RingHomClass (𝒜₁ →ᵍᵃ 𝒜₂) A₁ A₂ where
   map_mul f := f.map_mul
   map_add f := f.map_add
   map_one f := f.map_one
   map_zero f := f.map_zero
-  commutes f := f.commutes
 
 variable (f : 𝒜₁ →ᵍᵃ 𝒜₂)
 
-@[simp] lemma coe_toAlgHom : (f.toAlgHom : A₁ → A₂) = f := rfl
+@[simp] lemma coe_toRingHom : (f.toRingHom : A₁ → A₂) = f := rfl
 
-lemma map_mem {n : ℕ} {a : A₁} (ha : a ∈ 𝒜₁ n) : f a ∈ 𝒜₂ n :=
+lemma map_mem {n : ι} {a : A₁} (ha : a ∈ 𝒜₁ n) : f a ∈ 𝒜₂ n :=
   f.map_mem' ha
 
-@[simps] def linearMap (n : ℕ) : 𝒜₁ n →ₗ[R] 𝒜₂ n where
+@[simps] def addHom (n : ι) : 𝒜₁ n →+ 𝒜₂ n where
   toFun a := ⟨f a, f.map_mem a.2⟩
+  map_zero' := by ext; simp
   map_add' x y := by ext; simp
-  map_smul' c x := by ext; simp
 
-@[simp] lemma decompose_map [GradedAlgebra 𝒜₁] [GradedAlgebra 𝒜₂] {x : A₁} :
-    DirectSum.decompose 𝒜₂ (f x) = .map (fun n ↦ f.linearMap n) (.decompose 𝒜₁ x) := by
+variable [DecidableEq ι] [AddMonoid ι] [GradedAlgebra 𝒜₁] [GradedAlgebra 𝒜₂]
+
+@[simp] lemma decompose_map {x : A₁} :
+    DirectSum.decompose 𝒜₂ (f x) = .map f.addHom (.decompose 𝒜₁ x) := by
   classical
   rw [← DirectSum.sum_support_decompose 𝒜₁ x, map_sum, DirectSum.decompose_sum,
     DirectSum.decompose_sum, map_sum]
@@ -91,15 +133,16 @@ lemma map_mem {n : ℕ} {a : A₁} (ha : a ∈ 𝒜₁ n) : f a ∈ 𝒜₂ n :=
     DirectSum.decompose_of_mem _ (Subtype.prop _), DirectSum.map_of]
   rfl
 
-lemma map_coe_decompose [GradedAlgebra 𝒜₁] [GradedAlgebra 𝒜₂] {x : A₁} {n : ℕ} :
+lemma map_coe_decompose {x : A₁} {n : ι} :
     f (DirectSum.decompose 𝒜₁ x n) = DirectSum.decompose 𝒜₂ (f x) n := by
   simp
 
 end GradedAlgHom
 
-namespace HomogeneousIdeal
+variable [DecidableEq ι] [AddCommMonoid ι] [GradedAlgebra 𝒜₁] [GradedAlgebra 𝒜₂]
+variable {𝒜₁ 𝒜₂} (f : 𝒜₁ →ᵍᵃ 𝒜₂)
 
-variable {𝒜₁ 𝒜₂} [GradedAlgebra 𝒜₁] [GradedAlgebra 𝒜₂] (f : 𝒜₁ →ᵍᵃ 𝒜₂)
+namespace HomogeneousIdeal
 
 @[simp] lemma coe_toIdeal (I : HomogeneousIdeal 𝒜₁) : (I.toIdeal : Set A₁) = I := rfl
 
@@ -140,19 +183,42 @@ end HomogeneousIdeal
 
 namespace HomogeneousLocalization
 
-variable {𝒜₁ 𝒜₂} [GradedAlgebra 𝒜₁] [GradedAlgebra 𝒜₂] (f : 𝒜₁ →ᵍᵃ 𝒜₂)
+open NumDenSameDeg in
+/-- We fix `map` which needed same base ring. -/
+def map' {P : Submonoid A₁} {Q : Submonoid A₂} (comap_le : P ≤ Q.comap f) :
+  HomogeneousLocalization 𝒜₁ P →+* HomogeneousLocalization 𝒜₂ Q where
+  toFun := Quotient.map'
+    (fun x ↦ ⟨x.deg, ⟨_, f.2 x.num.2⟩, ⟨_, f.2 x.den.2⟩, comap_le x.den_mem⟩)
+    fun x y (e : x.embedding = y.embedding) ↦ by
+      apply_fun IsLocalization.map (Localization Q) (f : A₁ →+* A₂) comap_le at e
+      simp_rw [HomogeneousLocalization.NumDenSameDeg.embedding, Localization.mk_eq_mk',
+        IsLocalization.map_mk', ← Localization.mk_eq_mk'] at e
+      exact e
+  map_add' := Quotient.ind₂' fun x y ↦ by
+    simp only [← mk_add, Quotient.map'_mk'', num_add, map_add, map_mul, den_add]; rfl
+  map_mul' := Quotient.ind₂' fun x y ↦ by
+    simp only [← mk_mul, Quotient.map'_mk'', num_mul, map_mul, den_mul]; rfl
+  map_zero' := by simp only [← mk_zero (𝒜 := 𝒜₁), Quotient.map'_mk'', deg_zero,
+    num_zero, ZeroMemClass.coe_zero, map_zero, den_zero, map_one]; rfl
+  map_one' := by simp only [← mk_one (𝒜 := 𝒜₁), Quotient.map'_mk'',
+    num_one, den_one, map_one]; rfl
+
+lemma map'_mk {P : Submonoid A₁} {Q : Submonoid A₂} (comap_le : P ≤ Q.comap f)
+    (c : NumDenSameDeg 𝒜₁ P) :
+    map' f comap_le (mk c) = mk ⟨c.deg, ⟨_, f.2 c.num.2⟩, ⟨_, f.2 c.den.2⟩, comap_le c.den_mem⟩ :=
+  rfl
 
 noncomputable def localRingHom (I : Ideal A₁) [I.IsPrime] (J : Ideal A₂) [J.IsPrime]
     (hIJ : I = J.comap f) :
     AtPrime 𝒜₁ I →+* AtPrime 𝒜₂ J :=
-  map _ _ f (Localization.le_comap_primeCompl_iff.mpr <| hIJ ▸ le_rfl) f.2
+  map' f <| Localization.le_comap_primeCompl_iff.mpr <| hIJ ▸ le_rfl
 
 variable (I : Ideal A₁) [I.IsPrime] (J : Ideal A₂) [J.IsPrime] (hIJ : I = J.comap f)
 
 @[simp] lemma val_localRingHom (x : AtPrime 𝒜₁ I) :
     (localRingHom f I J hIJ x).val = Localization.localRingHom _ _ f hIJ x.val := by
   obtain ⟨⟨i, x, s, hs⟩, rfl⟩ := x.mk_surjective
-  simp [localRingHom, map_mk]
+  simp [localRingHom, map'_mk]
 
 instance isLocalHom_localRingHom : IsLocalHom (localRingHom f I J hIJ) where
   map_nonunit x hx := by
@@ -163,8 +229,8 @@ instance isLocalHom_localRingHom : IsLocalHom (localRingHom f I J hIJ) where
 @[simps] def NumDenSameDeg.map {W₁ : Submonoid A₁} {W₂ : Submonoid A₂}
     (hw : W₁ ≤ W₂.comap f) (c : NumDenSameDeg 𝒜₁ W₁) : NumDenSameDeg 𝒜₂ W₂ where
   deg := c.deg
-  den := f.linearMap _ c.den
-  num := f.linearMap _ c.num
+  den := f.addHom _ c.den
+  num := f.addHom _ c.num
   den_mem := hw c.den_mem
 
 lemma localRingHom_mk (c : NumDenSameDeg 𝒜₁ I.primeCompl) :
@@ -210,24 +276,10 @@ def mapₐ {R R₁ R₂ A₁ A₂ : Type*}
     {𝒜₂ : ι → Submodule R₂ A₂} [GradedAlgebra 𝒜₂]
     {𝒮₁ : Submonoid A₁} {𝒮₂ : Submonoid A₂}
     (g : A₁ →ₐ[R] A₂) (comap_le : 𝒮₁ ≤ Submonoid.comap g 𝒮₂)
-    (hg : ∀ ⦃i⦄, ∀ a ∈ 𝒜₁ i, g a ∈ 𝒜₂ i) :
+    (hg : ∀ ⦃i a⦄, a ∈ 𝒜₁ i → g a ∈ 𝒜₂ i) :
     HomogeneousLocalization 𝒜₁ 𝒮₁ →ₐ[R] HomogeneousLocalization 𝒜₂ 𝒮₂ where
-  toFun := Quotient.map'
-    (fun x ↦ ⟨x.deg, ⟨_, hg _ x.num.2⟩, ⟨_, hg _ x.den.2⟩, comap_le x.den_mem⟩)
-    fun x y (e : x.embedding = y.embedding) ↦ by
-      apply_fun IsLocalization.map (Localization 𝒮₂) (g : A₁ →+* A₂) comap_le at e
-      simp_rw [HomogeneousLocalization.NumDenSameDeg.embedding, Localization.mk_eq_mk',
-        IsLocalization.map_mk', ← Localization.mk_eq_mk'] at e
-      exact e
-  map_add' := Quotient.ind₂' fun x y ↦ by
-    simp only [← mk_add, Quotient.map'_mk'', num_add, map_add, map_mul, den_add]; rfl
-  map_mul' := Quotient.ind₂' fun x y ↦ by
-    simp only [← mk_mul, Quotient.map'_mk'', num_mul, map_mul, den_mul]; rfl
-  map_zero' := by simp only [← mk_zero (𝒜 := 𝒜₁), Quotient.map'_mk'', deg_zero,
-    num_zero, ZeroMemClass.coe_zero, map_zero, den_zero, map_one]; rfl
-  map_one' := by simp only [← mk_one (𝒜 := 𝒜₁), Quotient.map'_mk'',
-    num_one, den_one, map_one]; rfl
-  commutes' r := by ext; simp [fromZeroRingHom]
+  __ := map' ⟨g, hg⟩ comap_le
+  commutes' r := by ext; simp [fromZeroRingHom, map'_mk]
 
 @[simp] lemma mapₐ_mk {R R₁ R₂ A₁ A₂ : Type*}
     [CommRing R] [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂]
@@ -242,6 +294,47 @@ def mapₐ {R R₁ R₂ A₁ A₂ : Type*}
     (c : NumDenSameDeg 𝒜₁ 𝒮₁) :
     HomogeneousLocalization.mapₐ g comap_le hg (mk c) =
     mk ⟨c.deg, ⟨_, hg _ c.num.2⟩, ⟨_, hg _ c.den.2⟩, comap_le c.den_mem⟩ := rfl
+
+def Away.map {R₁ R₂ A₁ A₂ : Type*}
+    [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂] [Algebra R₁ A₁] [Algebra R₂ A₂]
+    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι]
+    {𝒜₁ : ι → Submodule R₁ A₁} [GradedAlgebra 𝒜₁]
+    {𝒜₂ : ι → Submodule R₂ A₂} [GradedAlgebra 𝒜₂]
+    {f₁ : A₁} {f₂ : A₂} (g : 𝒜₁ →ᵍᵃ 𝒜₂) (hgf : g f₁ = f₂) :
+    HomogeneousLocalization.Away 𝒜₁ f₁ →+* HomogeneousLocalization.Away 𝒜₂ f₂ :=
+  HomogeneousLocalization.map' g (Submonoid.powers_le.mpr ⟨1, by simp [hgf]⟩)
+
+@[simp] lemma Away.map_mk {R₁ R₂ A₁ A₂ : Type*}
+    [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂] [Algebra R₁ A₁] [Algebra R₂ A₂]
+    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι]
+    {𝒜₁ : ι → Submodule R₁ A₁} [GradedAlgebra 𝒜₁]
+    {𝒜₂ : ι → Submodule R₂ A₂} [GradedAlgebra 𝒜₂]
+    {f₁ : A₁} {f₂ : A₂} (g : 𝒜₁ →ᵍᵃ 𝒜₂) (hgf : g f₁ = f₂)
+    {d : ι} (hf : f₁ ∈ 𝒜₁ d) (n : ℕ) (a : A₁) (ha : a ∈ 𝒜₁ (n • d)) :
+    map g hgf (.mk _ hf n a ha) = .mk _ (hgf ▸ g.2 hf) n (g a) (g.2 ha) := by
+  simp [map, Away.mk, map'_mk, hgf]
+
+@[simp] lemma Away.map_lof {R₁ R₂ A₁ A₂ : Type*}
+    [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂] [Algebra R₁ A₁] [Algebra R₂ A₂]
+    {ι : Type*} [DecidableEq ι] [AddCommMonoid ι]
+    {𝒜₁ : ι → Submodule R₁ A₁} [GradedAlgebra 𝒜₁]
+    {𝒜₂ : ι → Submodule R₂ A₂} [GradedAlgebra 𝒜₂]
+    {f₁ : A₁} {f₂ : A₂} (g : 𝒜₁ →ᵍᵃ 𝒜₂) (hgf : g f₁ = f₂)
+    {d : ι} (hf : f₁ ∈ 𝒜₁ d) (n : ℕ) (a : 𝒜₁ (n • d)) :
+    map g hgf (lof _ hf n a) = lof _ (hgf ▸ g.2 hf) n ⟨g a, g.2 a.2⟩ :=
+  map_mk _ _ hf _ _ _
+
+-- @[simp] lemma Away.val_map {R₁ R₂ A₁ A₂ : Type*}
+--     [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂] [Algebra R₁ A₁] [Algebra R₂ A₂]
+--     {ι : Type*} [DecidableEq ι] [AddCommMonoid ι]
+--     {𝒜₁ : ι → Submodule R₁ A₁} [GradedAlgebra 𝒜₁]
+--     {𝒜₂ : ι → Submodule R₂ A₂} [GradedAlgebra 𝒜₂]
+--     {f₁ : A₁} {f₂ : A₂} (g : 𝒜₁ →ᵍᵃ 𝒜₂) (hgf : g f₁ = f₂) (x : Away 𝒜₁ f₁)
+--     {d : ι} (hf : f₁ ∈ 𝒜₁ d) :
+--     (map g hgf x).val = Localization.awayLift ((algebraMap _ _).comp g.toRingHom) _
+--       (IsLocalization.map_units (M := .powers f₂) _ ⟨g f₁, 1, hgf ▸ pow_one _⟩) x.val := by
+--   obtain ⟨n, x, hx, rfl⟩ := x.mk_surjective _ hf
+--   simp [Localization.awayLift_mk]
 
 def Away.mapₐ {R R₁ R₂ A₁ A₂ : Type*}
     [CommRing R] [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂]
@@ -282,9 +375,22 @@ def Away.mapₐ {R R₁ R₂ A₁ A₂ : Type*}
 
 end HomogeneousLocalization
 
+end gradedalghom
 
+
+section nat
+
+variable {R₁ : Type u₁} {R₂ : Type u₂} {A₁ A₂ : Type v}
+  [CommRing R₁] [CommRing R₂] [CommRing A₁] [CommRing A₂]
+  [Algebra R₁ A₁] [Algebra R₂ A₂]
+  (𝒜₁ : ℕ → Submodule R₁ A₁) (𝒜₂ : ℕ → Submodule R₂ A₂)
 variable {𝒜₁ 𝒜₂} [GradedAlgebra 𝒜₁] [GradedAlgebra 𝒜₂] (f : 𝒜₁ →ᵍᵃ 𝒜₂)
   (hf : HomogeneousIdeal.irrelevant 𝒜₂ ≤ (HomogeneousIdeal.irrelevant 𝒜₁).map f)
+
+@[simps!] def GradedAlgHom.zero : 𝒜₁ 0 →+* 𝒜₂ 0 where
+  __ := f.addHom 0
+  map_one' := by ext; simp
+  map_mul' x y := by ext; simp
 
 namespace ProjectiveSpectrum
 
@@ -326,7 +432,7 @@ lemma isLocallyFraction_comapFun
   rintro ⟨p, hpV⟩
   rcases hs ⟨.comap f hf p, hUV hpV⟩ with ⟨W, m, iWU, i, a, b, hb, h_frac⟩
   refine ⟨W.comap (ProjectiveSpectrum.comap f hf) ⊓ V, ⟨m, hpV⟩, Opens.infLERight _ _, i,
-    f.linearMap i a, f.linearMap i b, fun ⟨q, ⟨hqW, hqV⟩⟩ ↦ hb ⟨_, hqW⟩, ?_⟩
+    f.addHom i a, f.addHom i b, fun ⟨q, ⟨hqW, hqV⟩⟩ ↦ hb ⟨_, hqW⟩, ?_⟩
   rintro ⟨q, ⟨hqW, hqV⟩⟩
   ext
   specialize h_frac ⟨_, hqW⟩
@@ -427,13 +533,13 @@ lemma _root_.AlgebraicGeometry.Γ_map_Spec_map_ΓSpecIso_inv
 @[simp] lemma awayToSection_comp_appLE {i : ℕ} {s : A₁} (hs : s ∈ 𝒜₁ i) :
     awayToSection 𝒜₁ s ≫
       Scheme.Hom.appLE (map f hf) (basicOpen 𝒜₁ s) (basicOpen 𝒜₂ (f s)) (by rfl) =
-    CommRingCat.ofHom (Away.mapₐ f f.2 rfl : Away 𝒜₁ s →ₐ[R] Away 𝒜₂ (f s)) ≫
+    CommRingCat.ofHom (Away.map f rfl : Away 𝒜₁ s →+* Away 𝒜₂ (f s)) ≫
       awayToSection 𝒜₂ (f s) := by
   ext x
   obtain ⟨n, x, rfl⟩ := x.lof_surjective _ hs
   simp only [CommRingCat.hom_comp, smul_eq_mul, RingHom.coe_comp, Function.comp_apply,
-    CommRingCat.hom_ofHom, RingHom.coe_coe]
-  conv => enter[2,2]; exact Away.mapₐ_lof _ _ _ _ _ _
+    CommRingCat.hom_ofHom]
+  conv => enter[2,2]; exact Away.map_lof _ _ _ _ _
   refine Subtype.ext <| funext fun p ↦ ?_
   change HomogeneousLocalization.mk _ = .mk _
   ext
@@ -448,13 +554,32 @@ Proj 𝒜₂         ⟶ Proj 𝒜₁
 Spec A₂[f(s)⁻¹]₀ ⟶ Spec A₁[s⁻¹]₀
 ```
 -/
-theorem awayι_comp_map {i : ℕ} (hi : 0 < i) (s : A₁) (hs : s ∈ 𝒜₁ i) :
+@[reassoc] theorem awayι_comp_map {i : ℕ} (hi : 0 < i) (s : A₁) (hs : s ∈ 𝒜₁ i) :
     awayι 𝒜₂ (f s) (f.2 hs) hi ≫ map f hf =
-    Spec.map (CommRingCat.ofHom (Away.mapₐ f f.2 (by rfl)).toRingHom) ≫ awayι 𝒜₁ s hs hi := by
+    Spec.map (CommRingCat.ofHom (Away.map f (by rfl))) ≫ awayι 𝒜₁ s hs hi := by
   rw [awayι, awayι, Category.assoc, ι_comp_map, ← Category.assoc, ← Category.assoc]
   congr 1
   rw [Iso.inv_comp_eq, ← Category.assoc, Iso.eq_comp_inv]
   refine ext_to_Spec <| (cancel_mono (basicOpen 𝒜₂ (f s)).topIso.hom).mp ?_
   simp [basicOpenIsoSpec_hom, basicOpenToSpec_app_top, awayToSection_comp_appLE _ _ hs]
 
+@[simps! I₀ f] noncomputable def mapAffineOpenCover : (Proj 𝒜₂).AffineOpenCover :=
+  openCoverOfISupEqTop _ (fun s : (affineOpenCover 𝒜₁).I₀ ↦ f s.2) (fun s ↦ f.2 s.2.2)
+    (fun s ↦ s.1.2) <| ((HomogeneousIdeal.toIdeal_le_toIdeal_iff _).mpr hf).trans <|
+    Ideal.map_le_of_le_comap <| (HomogeneousIdeal.irrelevant_toIdeal_le _).mpr fun i hi x hx ↦
+    Ideal.subset_span ⟨⟨⟨i, hi⟩, ⟨x, hx⟩⟩, rfl⟩
+
+@[simp] lemma away_map_comp_fromZeroRingHom (s : A₁) :
+    (Away.map f rfl).comp (fromZeroRingHom 𝒜₁ (Submonoid.powers s)) =
+    (fromZeroRingHom 𝒜₂ (Submonoid.powers (f s))).comp f.zero :=
+  RingHom.ext fun x ↦ by ext; simp [fromZeroRingHom, Away.map, map'_mk]
+
+@[reassoc (attr := simp)] lemma map_comp_toSpecZero :
+    map f hf ≫ toSpecZero 𝒜₁ = toSpecZero 𝒜₂ ≫ Spec.map (CommRingCat.ofHom f.zero) := by
+  refine (mapAffineOpenCover f hf).openCover.hom_ext _ _ fun s ↦ ?_
+  simp [awayι_comp_map_assoc _ _ s.1.2 (s.2 : A₁) s.2.2, awayι_toSpecZero, awayι_toSpecZero_assoc,
+    ← Spec.map_comp, ← CommRingCat.ofHom_comp]
+
 end AlgebraicGeometry.Proj
+
+end nat
