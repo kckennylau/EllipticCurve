@@ -4,6 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau
 -/
 
+import EllipticCurve.ProjectiveSpace.TensorProduct.Proj
+import EllipticCurve.ProjectiveSpace.ProjCongr
 import Mathlib.AlgebraicGeometry.AffineSpace
 import Mathlib.AlgebraicGeometry.ProjectiveSpectrum.Proper
 import Mathlib.RingTheory.MvPolynomial.Homogeneous
@@ -66,8 +68,45 @@ namespace Proj
 
 end Proj
 
--- /-- `ℙ(n; Spec R)` is isomorphic to `Proj R[n]`. -/
--- def SpecIso (R : Type u) [CommRing R] : ℙ(n; Spec (.of R)) ≅ Proj (homogeneousSubmodule n R) :=
---   _
+instance _root_.ULift.algebraLeft {R A : Type*} [CommSemiring R] [Semiring A] [Algebra R A] :
+    Algebra (ULift R) A where
+  algebraMap := (algebraMap R A).comp (ULift.ringEquiv (R := R))
+  commutes' _ := Algebra.commutes _
+  smul_def' _ := Algebra.smul_def _
+
+@[simps] def _root_.CategoryTheory.Limits.pullback.mapIso {C : Type*} [Category C]
+    {X₁ X₂ Y₁ Y₂ W₁ W₂ : C} {f₁ : X₁ ⟶ W₁} {g₁ : Y₁ ⟶ W₁} {f₂ : X₂ ⟶ W₂} {g₂ : Y₂ ⟶ W₂}
+    [HasPullback f₁ g₁] [HasPullback f₂ g₂] (eX : X₁ ≅ X₂) (eY : Y₁ ≅ Y₂) (eW : W₁ ≅ W₂)
+    (comm₁ : f₁ ≫ eW.hom = eX.hom ≫ f₂) (comm₂ : g₁ ≫ eW.hom = eY.hom ≫ g₂) :
+    pullback f₁ g₁ ≅ pullback f₂ g₂ where
+  hom := pullback.map _ _ _ _ eX.hom eY.hom eW.hom comm₁ comm₂
+  inv := pullback.map _ _ _ _ eX.inv eY.inv eW.inv
+    (by rw [Iso.comp_inv_eq, Category.assoc, Iso.eq_inv_comp, comm₁])
+    (by rw [Iso.comp_inv_eq, Category.assoc, Iso.eq_inv_comp, comm₂])
+  hom_inv_id := pullback.hom_ext (by simp) (by simp)
+  inv_hom_id := pullback.hom_ext (by simp) (by simp)
+
+def _root_.MvPolynomial.algebraTensorGAlgEquiv (R : Type*) [CommRing R] {σ : Type*}
+    (A : Type*) [CommRing A] [Algebra R A] :
+    (fun n ↦ (homogeneousSubmodule σ R n).baseChange A) ≃ᵍᵃ homogeneousSubmodule σ A where
+  __ := MvPolynomial.algebraTensorAlgEquiv R A
+  map_one' := by simp
+  map_zero' := by simp
+  map_mem' n x hx := by
+    obtain ⟨x, hx⟩ := Submodule.toBaseChange_surjective _ _ ⟨x, hx⟩
+    replace hx := congr(($hx).val); subst hx
+    simp only [AlgEquiv.toEquiv_eq_coe, Equiv.toFun_as_coe, EquivLike.coe_coe, RingHom.coe_mk,
+      MonoidHom.coe_mk, OneHom.coe_mk, mem_homogeneousSubmodule]
+    induction x with
+    | zero => simp [isHomogeneous_zero]
+    | add => simp [IsHomogeneous.add, *]
+    | tmul a x => simpa [smul_eq_C_mul] using (x.2.map _).C_mul _
+
+/-- `ℙ(n; Spec(R))` is isomorphic to `Proj R[n]`. -/
+def SpecIso (R : Type u) [CommRing R] : ℙ(n; Spec(R)) ≅ Proj (homogeneousSubmodule n R) :=
+  pullback.mapIso (Iso.refl _) (Iso.refl _) (terminalIsoIsTerminal specULiftZIsTerminal)
+    (specULiftZIsTerminal.hom_ext ..) (specULiftZIsTerminal.hom_ext ..) ≪≫
+  (projTensorProduct ℤ[n].{u} R).symm ≪≫
+  Proj.congr (MvPolynomial.algebraTensorGAlgEquiv _ _)
 
 end AlgebraicGeometry

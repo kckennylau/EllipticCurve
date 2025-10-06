@@ -9,6 +9,7 @@ import EllipticCurve.Lemmas
 import EllipticCurve.ProjectiveSpace.AlgebraHomogeneousLocalization
 import EllipticCurve.ProjectiveSpace.Functor
 import EllipticCurve.ProjectiveSpace.HomogeneousLocalizationMvPolynomial
+import EllipticCurve.ProjectiveSpace.ProjCongr
 import EllipticCurve.ProjectiveSpace.Scheme
 import EllipticCurve.ProjectiveSpace.TensorProduct.BaseChange
 import EllipticCurve.ProjectiveSpace.TensorProduct.GradedAlgebra
