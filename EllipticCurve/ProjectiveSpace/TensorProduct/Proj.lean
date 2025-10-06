@@ -8,6 +8,7 @@ import EllipticCurve.ProjectiveSpace.TensorProduct.GradedAlgebra
 import EllipticCurve.ProjectiveSpace.TensorProduct.ProjMap
 import Mathlib.AlgebraicGeometry.ProjectiveSpectrum.Basic
 import Mathlib.AlgebraicGeometry.Pullbacks
+import Mathlib.AlgebraicGeometry.PullbackCarrier
 import Mathlib.LinearAlgebra.TensorProduct.Finiteness
 import Mathlib.RingTheory.GradedAlgebra.Basic
 
@@ -16,7 +17,7 @@ import Mathlib.RingTheory.GradedAlgebra.Basic
 In this file we show `Proj (S ⊗[R] 𝒜) ≅ Spec S ×_R Proj 𝒜` where `𝒜` is a graded `R`-algebra.
 -/
 
-universe u
+universe u₁ u₂ u v
 
 open TensorProduct in
 def AlgHom.liftBaseChange {R S A B : Type*}
@@ -269,12 +270,6 @@ lemma baseChange_iSupEqTop :
   rw [← mul_one c.1, ← one_mul (c.2: A), ← Algebra.TensorProduct.tmul_mul_tmul]
   refine Ideal.mul_mem_left _ _ <| Ideal.subset_span ⟨⟨⟨i, pos_of_ne_zero hi₀⟩, _⟩, rfl⟩
 
-noncomputable def Proj.openCoverBaseChange :
-    (Proj fun n ↦ (𝒜 n).baseChange S).AffineOpenCover :=
-  Proj.openCoverOfISupEqTop _ (fun f : (Proj.affineOpenCover 𝒜).I₀ ↦ 1 ⊗ₜ f.2)
-    (fun f ↦ Submodule.tmul_mem_baseChange_of_mem _ f.2.2) (fun f ↦ f.1.2)
-    (baseChange_iSupEqTop 𝒜 S)
-
 set_option maxHeartbeats 999999 in
 -- I don't know why
 noncomputable def awayBaseChange {i : ℕ} {f : A} (hf : f ∈ 𝒜 i) :
@@ -452,7 +447,7 @@ Proj(S ⊗[R] 𝒜) ---------⟶ Spec(S) ×[Spec(R)] Proj(𝒜)
 Spec((S⊗[R]A)[(1⊗s)⁻¹]) ⟶ Spec(S) ×[Spec(R)] Spec(A[s⁻¹])
 ```
 -/
-lemma awayι_comp_ofProjTensor {i : ℕ} (hi : 0 < i) {s : A} (hs : s ∈ 𝒜 i) :
+@[simp] lemma awayι_comp_ofProjTensor {i : ℕ} (hi : 0 < i) {s : A} (hs : s ∈ 𝒜 i) :
     Proj.awayι (fun n ↦ (𝒜 n).baseChange S) (1 ⊗ₜ s) (Submodule.tmul_mem_baseChange_of_mem _ hs)
       hi ≫ ofProjTensor 𝒜 S =
     (Proj.baseChangeIsoComponent 𝒜 S hs).hom ≫
@@ -461,18 +456,140 @@ lemma awayι_comp_ofProjTensor {i : ℕ} (hi : 0 < i) {s : A} (hs : s ∈ 𝒜 i
   simpa [- HomogeneousLocalization.algebraMap_eq', ofProjTensor] using
     Proj.awayι_comp_map _ (GradedAlgebra.toTensor_admissible 𝒜 S) hi s hs
 
-/- -- https://math.arizona.edu/~cais/CourseNotes/AlgGeom04/notes216.pdf
+namespace Scheme
+
+@[simp] lemma image_comp {X Y Z : Scheme.{u}} {f : X ⟶ Y} {g : Y ⟶ Z}
+    [IsOpenImmersion f] [IsOpenImmersion g] (U : X.Opens) :
+    (f ≫ g) ''ᵁ U = g ''ᵁ f ''ᵁ U :=
+  TopologicalSpace.Opens.ext <| Set.image_comp g.base f.base (U : Set X)
+
+lemma image_id' {X : Scheme.{u}} {f : X ⟶ X} [IsOpenImmersion f] (hf : f = 𝟙 X) {U : X.Opens} :
+    f ''ᵁ U = U := by
+  subst hf; exact TopologicalSpace.Opens.ext <| Set.image_id _
+
+@[simp] lemma image_inv {X Y : Scheme.{u}} {f : X ≅ Y} (V : Y.Opens) :
+    f.inv ''ᵁ V = f.hom ⁻¹ᵁ V := by
+  rw [← f.hom.preimage_image_eq (f.inv ''ᵁ V), ← image_comp, image_id' (by simp)]
+
+@[simp] lemma image_inv' {X Y : Scheme.{u}} {f : X ⟶ Y} [IsIso f] (V : Y.Opens) :
+    (inv f) ''ᵁ V = f ⁻¹ᵁ V :=
+  image_inv (f := asIso f) V
+
+@[simp] lemma image_preimage {X Y : Scheme.{u}} {f : X ⟶ Y} [IsIso f] {V : Y.Opens} :
+    f ''ᵁ (f ⁻¹ᵁ V) = V :=
+  TopologicalSpace.Opens.ext <| Set.image_preimage_eq _
+    (ConcreteCategory.bijective_of_isIso f.base).surjective
+
+lemma image_eq_iff_eq_preimage {X Y : Scheme.{u}} {f : X ⟶ Y} [IsIso f]
+    {U : X.Opens} {V : Y.Opens} :
+    f ''ᵁ U = V ↔ U = f ⁻¹ᵁ V :=
+  ⟨(· ▸ by simp), (· ▸ by simp)⟩
+
+end Scheme
+
+/-- To check if `f : X ⟶ Y` is an isomorphism, one can supply an open cover of `X` and an open
+cover of `Y` (indexed by the same set `S`), and then maps `f_i : U_i ⟶ V_i` for `i : S` that are
+iso such that the squares commute. -/
+theorem isIso_of_cover {X Y : Scheme.{v}} (f : X ⟶ Y)
+    (U : X.OpenCover) (V : Y.OpenCover)
+    {ι : Type*} (iU : ι → U.I₀) (hu : iU.Surjective) (iV : ι → V.I₀) (hv : iV.Surjective)
+    (φ : ∀ i : ι, U.X (iU i) ⟶ V.X (iV i)) [∀ i, IsIso (φ i)]
+    (hfφ : ∀ i : ι, U.f (iU i) ≫ f = φ i ≫ V.f (iV i))
+    (preimage : ∀ i : ι, f ⁻¹ᵁ (V.f (iV i)).opensRange = (U.f (iU i)).opensRange) :
+    IsIso f :=
+  let U' : X.OpenCover :=
+  { I₀ := ι
+    X i := U.X (iU i)
+    f i := U.f (iU i)
+    idx x := (hu (U.idx x)).choose
+    covers x := by rw [(hu (U.idx x)).choose_spec]; exact U.covers x }
+  let V' : Y.OpenCover :=
+  { I₀ := ι
+    X i := V.X (iV i)
+    f i := V.f (iV i)
+    idx y := (hv (V.idx y)).choose
+    covers y := by rw [(hv (V.idx y)).choose_spec]; exact V.covers y }
+  let inv : Y ⟶ X := V'.glueMorphisms (fun i : ι ↦ inv (φ i) ≫ U'.f i) fun i₁ i₂ : ι ↦ by
+    let p : pullback (V'.f i₁) (V'.f i₂) ⟶ pullback (U'.f i₁) (U'.f i₂) :=
+      IsOpenImmersion.lift (pullback.fst _ _) (pullback.fst _ _ ≫ inv (φ i₁)) <| by
+        rw [← Scheme.Hom.coe_opensRange, ← Scheme.Hom.coe_opensRange, SetLike.coe_subset_coe,
+          IsOpenImmersion.opensRange_pullback_fst_of_right, Scheme.Hom.opensRange_comp,
+          IsOpenImmersion.opensRange_pullback_fst_of_right, Scheme.image_inv',
+          ← Scheme.preimage_comp, ← hfφ, Scheme.preimage_comp, preimage]
+    have hp₁ : p ≫ pullback.fst _ _ = pullback.fst _ _ ≫ inv (φ i₁) :=
+      IsOpenImmersion.lift_fac _ _ _
+    have hp₂ : p ≫ pullback.snd _ _ = pullback.snd _ _ ≫ inv (φ i₂) := by
+      rw [IsIso.eq_comp_inv]
+      refine (cancel_mono (V'.f i₂)).mp ?_
+      simp_rw [Category.assoc]
+      rw [← hfφ, ← pullback.condition_assoc, reassoc_of% hp₁, hfφ, IsIso.inv_hom_id_assoc,
+        pullback.condition]
+    dsimp only
+    rw [← reassoc_of% hp₁, pullback.condition, reassoc_of% hp₂]
+  have comp_inv : f ≫ inv = 𝟙 X := U'.hom_ext _ _ fun i ↦ by
+    unfold inv
+    rw [reassoc_of% hfφ, V'.ι_glueMorphisms, IsIso.hom_inv_id_assoc, Category.comp_id]
+  have inv_comp : inv ≫ f = 𝟙 Y := V'.hom_ext _ _ fun i ↦ by
+    unfold inv
+    rw [V'.ι_glueMorphisms_assoc, Category.assoc, hfφ, IsIso.inv_hom_id_assoc, Category.comp_id]
+  ⟨inv, comp_inv, inv_comp⟩
+
+noncomputable def Proj.openCoverBaseChange :
+    (Proj fun n ↦ (𝒜 n).baseChange S).AffineOpenCover :=
+  Proj.mapAffineOpenCover _ <| GradedAlgebra.toTensor_admissible 𝒜 S
+
+noncomputable def Proj.openCoverPullback :
+    (pullback (Spec.map (ofHom (algebraMap R S))) (Proj.toSpec 𝒜)).OpenCover :=
+  (Scheme.Pullback.openCoverOfRight (Proj.affineOpenCover 𝒜).openCover
+      (Spec.map <| ofHom <| algebraMap R S) (Proj.toSpec 𝒜)).copy
+    (Proj.affineOpenCover 𝒜).I₀
+    (fun f ↦ pullback (Spec.map (ofHom (algebraMap R S)))
+      (Spec.map (ofHom (algebraMap R (HomogeneousLocalization.Away 𝒜 f.2)))))
+    (fun f ↦ pullback.map _ _ _ _ (𝟙 _) (Proj.awayι 𝒜 f.2 f.2.2 f.1.2) (𝟙 _) (by simp) (by simp))
+    (Equiv.refl _) (fun _ ↦ pullback.congrHom rfl (by simp [affineOpenCover, openCoverOfISupEqTop]))
+    fun f ↦ pullback.hom_ext (by simp) (by simp [Proj.affineOpenCover, Proj.openCoverOfISupEqTop])
+
+@[simp] lemma Proj.opensRange_openCoverPullback {f} :
+    ((Proj.openCoverPullback 𝒜 S).f f).opensRange =
+    pullback.snd (Spec.map (ofHom (algebraMap R S))) (toSpec 𝒜) ⁻¹ᵁ basicOpen _ f.2 :=
+  TopologicalSpace.Opens.ext <| by
+    simp [openCoverPullback, Scheme.Pullback.range_map, ← Proj.opensRange_awayι _ _ f.2.2]
+
+instance : IsIso (ofProjTensor 𝒜 S) :=
+  isIso_of_cover _ (Proj.openCoverBaseChange 𝒜 S).openCover
+    (Proj.openCoverPullback 𝒜 S)
+    id Function.surjective_id id Function.surjective_id
+    (fun f ↦ (Proj.baseChangeIsoComponent 𝒜 S f.2.2).hom)
+    (fun f ↦ by simp [Proj.openCoverBaseChange, Proj.openCoverPullback])
+    fun f ↦ by simp [← Scheme.preimage_comp, - TopologicalSpace.Opens.map_comp_obj, ofProjTensor,
+      Proj.openCoverBaseChange, Proj.opensRange_awayι]
+
+-- https://math.arizona.edu/~cais/CourseNotes/AlgGeom04/notes216.pdf
 noncomputable def projTensorProduct : Proj (fun n ↦ (𝒜 n).baseChange S) ≅
-    pullback (Spec.map (ofHom (algebraMap R S))) (Proj.toSpec 𝒜) where
-  hom := (Proj.openCoverBaseChange 𝒜 S).openCover.glueMorphisms
-    (fun f ↦ (Proj.baseChangeIsoComponent _ _ f).hom ≫
-      (Scheme.Pullback.openCoverOfRight (Proj.affineOpenCover 𝒜).openCover _ _).f f)
-    (by simp)
-  inv := (Scheme.Pullback.openCoverOfRight (Proj.affineOpenCover 𝒜).openCover _ _).glueMorphisms
-    (fun f ↦ (Proj.baseChangeIsoComponent _ _ f).inv ≫
-      (Proj.openCoverBaseChange 𝒜 S).openCover.f f)
-    _
-  hom_inv_id := _
-  inv_hom_id := _ -/
+    pullback (Spec.map (ofHom (algebraMap R S))) (Proj.toSpec 𝒜) :=
+  asIso <| ofProjTensor 𝒜 S
+
+@[simp] lemma projTensorProduct_hom_comp_pullback_fst :
+    (projTensorProduct 𝒜 S).hom ≫ pullback.fst _ _ = Proj.toSpec _ := by
+  simp [projTensorProduct, ofProjTensor]
+
+@[simp] lemma projTensorProduct_hom_comp_pullback_snd :
+    (projTensorProduct 𝒜 S).hom ≫ pullback.snd _ _ =
+    Proj.map _ (GradedAlgebra.toTensor_admissible 𝒜 S) := by
+  simp [projTensorProduct, ofProjTensor]
+
+@[simp] lemma awayι_comp_projTensorProduct {i : ℕ} (hi : 0 < i) {s : A} (hs : s ∈ 𝒜 i) :
+    Proj.awayι (fun n ↦ (𝒜 n).baseChange S) (1 ⊗ₜ s) (Submodule.tmul_mem_baseChange_of_mem _ hs)
+      hi ≫ (projTensorProduct 𝒜 S).hom =
+    (Proj.baseChangeIsoComponent 𝒜 S hs).hom ≫
+      pullback.map _ _ _ _ (𝟙 _) (Proj.awayι _ s hs hi) (𝟙 _) (by simp) (by simp) :=
+  awayι_comp_ofProjTensor _ _ _ _
+
+@[simp] lemma projTensorProduct_image_basicOpen {s : A} :
+    (projTensorProduct 𝒜 S).hom ''ᵁ (Proj.basicOpen (fun n ↦ (𝒜 n).baseChange S) (1 ⊗ₜ s)) =
+    pullback.snd (Spec.map (ofHom (algebraMap R S))) (Proj.toSpec 𝒜) ⁻¹ᵁ Proj.basicOpen 𝒜 s := by
+  rw [Scheme.image_eq_iff_eq_preimage, ← Scheme.preimage_comp,
+    projTensorProduct_hom_comp_pullback_snd, Proj.map_preimage_basicOpen,
+    GradedAlgebra.toTensor_toFun]
 
 end AlgebraicGeometry
