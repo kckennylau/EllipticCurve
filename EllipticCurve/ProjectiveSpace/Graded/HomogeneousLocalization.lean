@@ -79,6 +79,12 @@ lemma algebraMap_apply' {r : R₀} : algebraMap R₀ (HomogeneousLocalization �
 instance : IsScalarTower R₀ R (HomogeneousLocalization 𝒜 x) :=
   .of_algebraMap_eq' rfl
 
+instance : IsScalarTower R₀ (𝒜 0) (HomogeneousLocalization 𝒜 x) :=
+  .of_algebraMap_eq' rfl
+
+instance : IsScalarTower R₀ (HomogeneousLocalization 𝒜 x) (Localization x) :=
+  .of_algebraMap_eq fun x ↦ show Localization.mk _ _ = Localization.mk _ _ by simp; rfl
+
 end Algebra
 
 section GradedRing
