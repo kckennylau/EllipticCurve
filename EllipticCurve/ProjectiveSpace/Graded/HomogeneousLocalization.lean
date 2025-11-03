@@ -148,17 +148,17 @@ variable {ι A₁ A₂ σ₁ σ₂ : Type*} [CommRing A₁] [CommRing A₂]
   [SetLike σ₁ A₁] [AddSubgroupClass σ₁ A₁] [SetLike σ₂ A₂] [AddSubgroupClass σ₂ A₂]
   [DecidableEq ι] [AddCommMonoid ι]
   {𝒜₁ : ι → σ₁} [GradedRing 𝒜₁] {𝒜₂ : ι → σ₂} [GradedRing 𝒜₂]
-  (f : 𝒜₁ →+*ᵍ 𝒜₂)
+  {F : Type*} [GradedFunLike F 𝒜₁ 𝒜₂] [RingHomClass F A₁ A₂] (f : F)
 
 section
 variable {P : Submonoid A₁} {Q : Submonoid A₂} (comap_le : P ≤ Q.comap f)
 
 def map' : HomogeneousLocalization 𝒜₁ P →+* HomogeneousLocalization 𝒜₂ Q :=
-  map _ _ f comap_le fun _ _ ↦ f.map_mem
+  map _ _ f comap_le fun _ _ ↦ map_mem f
 
 lemma map'_mk (c : NumDenSameDeg 𝒜₁ P) :
-    map' f comap_le (mk c) = mk ⟨c.deg, ⟨_, f.2 c.num.2⟩, ⟨_, f.2 c.den.2⟩, comap_le c.den_mem⟩ :=
-  rfl
+    map' f comap_le (mk c) =
+    mk ⟨c.deg, ⟨_, map_mem f c.num.2⟩, ⟨_, map_mem f c.den.2⟩, comap_le c.den_mem⟩ := rfl
 
 end
 
@@ -169,7 +169,7 @@ def map : Away 𝒜₁ x₁ →+* Away 𝒜₂ x₂ :=
   map' f <| Submonoid.powers_le.mpr ⟨1, by simp [hfx]⟩
 
 @[simp] lemma map_of {d : ι} (hx : x₁ ∈ 𝒜₁ d) (n : ℕ) (a : 𝒜₁ (n • d)) :
-    map f hfx (.of 𝒜₁ hx n a) = .of 𝒜₂ (hfx ▸ f.2 hx) n (gradedAddHom f (n • d) a) := by
+    map f hfx (.of 𝒜₁ hx n a) = .of 𝒜₂ (hfx ▸ map_mem f hx) n (gradedAddHom f (n • d) a) := by
   simp [map, of, HomogeneousLocalization.of, map'_mk, gradedAddHom, hfx]
 
 -- lemma val_map {d : ι} (hx : x₁ ∈ 𝒜₁ d) (a : Away 𝒜₁ x₁) :
@@ -183,7 +183,8 @@ end Away
 noncomputable def localRingHom (I : Ideal A₁) [I.IsPrime] (J : Ideal A₂) [J.IsPrime]
     (hIJ : I = J.comap f) :
     AtPrime 𝒜₁ I →+* AtPrime 𝒜₂ J :=
-  map' f <| Localization.le_comap_primeCompl_iff.mpr <| hIJ ▸ le_rfl
+  map' f <| (Localization.le_comap_primeCompl_iff (f := RingHomClass.toRingHom f)).mpr <|
+    hIJ ▸ le_rfl
 
 variable (I : Ideal A₁) [I.IsPrime] (J : Ideal A₂) [J.IsPrime] (hIJ : I = J.comap f)
 

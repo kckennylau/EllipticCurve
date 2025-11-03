@@ -4,12 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau
 -/
 
+import EllipticCurve.ProjectiveSpace.Graded.AlgEquiv
 import EllipticCurve.ProjectiveSpace.TensorProduct.Proj
-import EllipticCurve.ProjectiveSpace.ProjCongr
-import Mathlib.AlgebraicGeometry.AffineSpace
-import Mathlib.AlgebraicGeometry.ProjectiveSpectrum.Proper
+import Mathlib.AlgebraicGeometry.Limits
 import Mathlib.RingTheory.MvPolynomial.Homogeneous
-import Mathlib.RingTheory.TensorProduct.Basic
 
 /-!
 # Projective Space as Scheme
@@ -39,6 +37,8 @@ noncomputable section
 
 namespace AlgebraicGeometry
 
+open SpecOfNotation
+
 variable (n : Type u) (S : Scheme.{u})
 
 attribute [local instance] gradedAlgebra
@@ -52,21 +52,6 @@ def ProjectiveSpace (n : Type u) (S : Scheme.{u}) : Scheme.{u} :=
   pullback (terminal.from S) (terminal.from (Proj ℤ[n].{u}))
 
 @[inherit_doc] scoped notation "ℙ("n"; "S")" => ProjectiveSpace n S
-
-namespace Proj
-
--- /-- The canonical affine open cover of `Proj (MvPolynomial σ R)`. The cover is indexed by `σ`,
--- and each `i : σ` corresponds to `Spec (MvPolynomial {k // k ≠ i} R)`. -/
--- @[simps!] def openCoverMvPolynomial (σ : Type*) (R : Type*) [CommRing R] :
---     (Proj (homogeneousSubmodule σ R)).AffineOpenCover :=
---   (openCoverOfISupEqTop
---       (homogeneousSubmodule σ R) .X (fun _ ↦ isHomogeneous_X _ _) (fun _ ↦ zero_lt_one)
---       (by rw [homogeneous_eq_span, Ideal.span_le, Set.range_subset_iff]; exact
---         fun i ↦ Ideal.subset_span <| Set.mem_range_self _)).copy
---     _ _ _
-    -- (Equiv.refl σ) (.of <| MvPolynomial {k // k ≠ ·} R) (algEquivAway R · |>.toCommRingCatIso)
-
-end Proj
 
 instance _root_.ULift.algebraLeft {R A : Type*} [CommSemiring R] [Semiring A] [Algebra R A] :
     Algebra (ULift R) A where
@@ -86,17 +71,15 @@ instance _root_.ULift.algebraLeft {R A : Type*} [CommSemiring R] [Semiring A] [A
   hom_inv_id := pullback.hom_ext (by simp) (by simp)
   inv_hom_id := pullback.hom_ext (by simp) (by simp)
 
-def _root_.MvPolynomial.algebraTensorGAlgEquiv (R : Type*) [CommRing R] {σ : Type*}
-    (A : Type*) [CommRing A] [Algebra R A] :
-    (fun n ↦ (homogeneousSubmodule σ R n).baseChange A) ≃ᵍᵃ homogeneousSubmodule σ A where
+def _root_.MvPolynomial.algebraTensorGAlgEquiv (R σ A : Type*)
+    [CommRing R] [CommRing A] [Algebra R A] :
+    (homogeneousSubmodule σ R).baseChange A ≃ₐᵍ[A] homogeneousSubmodule σ A where
   __ := MvPolynomial.algebraTensorAlgEquiv R A
-  map_one' := by simp
-  map_zero' := by simp
-  map_mem' n x hx := by
+  map_mem' {n x} hx := by
     obtain ⟨x, hx⟩ := Submodule.toBaseChange_surjective _ _ ⟨x, hx⟩
     replace hx := congr(($hx).val); subst hx
-    simp only [AlgEquiv.toEquiv_eq_coe, Equiv.toFun_as_coe, EquivLike.coe_coe, RingHom.coe_mk,
-      MonoidHom.coe_mk, OneHom.coe_mk, mem_homogeneousSubmodule]
+    simp only [AlgEquiv.toEquiv_eq_coe, Equiv.toFun_as_coe, EquivLike.coe_coe,
+      mem_homogeneousSubmodule]
     induction x with
     | zero => simp [isHomogeneous_zero]
     | add => simp [IsHomogeneous.add, *]
@@ -107,6 +90,6 @@ def SpecIso (R : Type u) [CommRing R] : ℙ(n; Spec(R)) ≅ Proj (homogeneousSub
   pullback.mapIso (Iso.refl _) (Iso.refl _) (terminalIsoIsTerminal specULiftZIsTerminal)
     (specULiftZIsTerminal.hom_ext ..) (specULiftZIsTerminal.hom_ext ..) ≪≫
   (projTensorProduct ℤ[n].{u} R).symm ≪≫
-  Proj.congr (MvPolynomial.algebraTensorGAlgEquiv _ _)
+  Proj.congr (MvPolynomial.algebraTensorGAlgEquiv (ULift ℤ) n R)
 
 end AlgebraicGeometry

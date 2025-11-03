@@ -34,12 +34,12 @@ end
 
 namespace GradedAlgebra
 
-variable {ι R A S : Type*}
+variable {ι R A : Type*}
 
 section Semiring
-variable [CommSemiring R] [CommSemiring S] [Algebra R S]
 variable [DecidableEq ι] [AddMonoid ι]
-variable [Semiring A] [Algebra R A] (𝒜 : ι → Submodule R A) [GradedAlgebra 𝒜]
+variable [CommSemiring R] [Semiring A] [Algebra R A] (𝒜 : ι → Submodule R A) [GradedAlgebra 𝒜]
+variable {S : Type*} [CommSemiring S] [Algebra R S]
 
 instance baseChange : GradedAlgebra fun i ↦ (𝒜 i).baseChange S where
   one_mem := tmul_mem_baseChange_of_mem _ <| one_mem_graded 𝒜
@@ -62,12 +62,15 @@ instance : Algebra S ((𝒜 0).baseChange S) :=
 @[simp] lemma coe_algebraMap_apply (s : S) :
     (algebraMap _ ((𝒜 0).baseChange S) s : S ⊗[R] A) = s ⊗ₜ 1 := rfl
 
+variable (S) in
 /-- The inclusion `𝒜 → S ⊗ 𝒜`. -/
-def includeRight : 𝒜 →ₐᵍ[R] 𝒜.baseChange S where
+@[simps!] def includeRight : 𝒜 →ₐᵍ[R] 𝒜.baseChange S where
   __ := Algebra.TensorProduct.includeRight
   map_mem' := Submodule.tmul_mem_baseChange_of_mem _
 
 end Semiring
+
+variable {S : Type*}
 
 section CommSemiring
 variable [CommSemiring R] [CommSemiring S] [Algebra R S]

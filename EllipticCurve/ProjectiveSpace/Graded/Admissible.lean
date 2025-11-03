@@ -21,26 +21,36 @@ variable {ι σ τ ψ A B C : Type*} [Semiring A] [Semiring B] [Semiring C]
   [SetLike ψ C] [AddSubmonoidClass ψ C]
   {𝒜 : ι → σ} {ℬ : ι → τ} {𝒞 : ι → ψ}
   [GradedRing 𝒜] [GradedRing ℬ] [GradedRing 𝒞]
+  {F : Type*} [GradedFunLike F 𝒜 ℬ] [RingHomClass F A B]
 
 namespace GradedRingHom
 
-structure Admissible (f : 𝒜 →+*ᵍ ℬ) : Prop where
+@[mk_iff] structure Admissible (f : F) : Prop where
   admissible : ℬ₊ ≤ 𝒜₊.map f
 
 namespace Admissible
 
-theorem id : Admissible (.id 𝒜) where
+theorem id : Admissible (id 𝒜) where
   admissible := by simp
 
-theorem comp {f : ℬ →+*ᵍ 𝒞} {g : 𝒜 →+*ᵍ ℬ} (hf : f.Admissible) (hg : g.Admissible) :
-    (f.comp g).Admissible where
+theorem comp {f : ℬ →+*ᵍ 𝒞} {g : 𝒜 →+*ᵍ ℬ} (hf : Admissible f) (hg : Admissible g) :
+    Admissible (f.comp g) where
   admissible := hf.1.trans <| by rw [map_comp]; exact map_mono f hg.1
+
+theorem coe {f : F} (hf : Admissible f) : Admissible (f : 𝒜 →+*ᵍ ℬ) := ⟨hf.1⟩
+
+theorem of_coe {f : F} (hf : Admissible (f : 𝒜 →+*ᵍ ℬ)) : Admissible f := ⟨hf.1⟩
 
 end Admissible
 
+theorem admissible_coe_iff {f : F} : Admissible (f : 𝒜 →+*ᵍ ℬ) ↔ Admissible f := by
+  simp_rw [admissible_iff]; rfl
+
 end GradedRingHom
 
-theorem GradedRingEquiv.admissible (e : 𝒜 ≃+*ᵍ ℬ) : (e : 𝒜 →+*ᵍ ℬ).Admissible where
+open GradedRingHom
+
+theorem GradedRingEquiv.admissible (e : 𝒜 ≃+*ᵍ ℬ) : Admissible e where
   admissible := (irrelevant_le _).mpr fun i hi x hx ↦ by
     rw [← e.apply_symm_apply x] at hx ⊢
     exact Ideal.mem_map_of_mem _ <| mem_irrelevant_of_mem _ hi <| mem_of_map_mem e hx

@@ -236,7 +236,7 @@ private noncomputable def ofAwayBaseChange :
 variable (f) in
 private noncomputable def toAwayBaseChange :
     S ⊗[R] Away 𝒜 f →ₐ[S] Away (𝒜.baseChange S) (1 ⊗ₜ[R] f) :=
-  AlgHom.liftBaseChange <| Away.mapₐ (GradedAlgebra.includeRight _) rfl
+  AlgHom.liftBaseChange <| Away.mapₐ (GradedAlgebra.includeRight 𝒜 S) rfl
 
 private lemma ofAwayBaseChange_apply {n : ℕ} (x : 𝒜 (n • i)) :
     ofAwayBaseChange 𝒜 S hf
@@ -281,14 +281,14 @@ noncomputable def awayBaseChange :
 
 @[simp] lemma awayBaseChange_apply {n : ℕ} (x : 𝒜 (n • i)) :
     awayBaseChange 𝒜 S hf
-      (Away.of (Function.baseChange 𝒜 S) (Submodule.tmul_mem_baseChange_of_mem _ hf) n
+      (Away.of (𝒜.baseChange S) (Submodule.tmul_mem_baseChange_of_mem _ hf) n
         (Submodule.toBaseChange S (𝒜 (n • i)) (1 ⊗ₜ[R] x))) =
     1 ⊗ₜ[R] Away.of 𝒜 hf n x :=
   ofAwayBaseChange_apply ..
 
 @[simp] lemma awayBaseChange_symm_apply (x : Away 𝒜 f) :
     (awayBaseChange 𝒜 S hf).symm (1 ⊗ₜ[R] x) =
-    Away.mapₐ (GradedAlgebra.includeRight 𝒜) (by rfl) x := by
+    Away.mapₐ (GradedAlgebra.includeRight 𝒜 S) (by rfl) x := by
   simp [awayBaseChange, toAwayBaseChange]
 
 end HomogeneousLocalization

@@ -3,8 +3,8 @@ Copyright (c) 2025 Kenny Lau. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau
 -/
-
 import EllipticCurve.ProjectiveSpace.Graded.Admissible
+import EllipticCurve.ProjectiveSpace.Graded.AlgHom
 import EllipticCurve.ProjectiveSpace.Graded.HomogeneousLocalization
 import Mathlib.AlgebraicGeometry.ProjectiveSpectrum.Basic
 
@@ -13,13 +13,15 @@ import Mathlib.AlgebraicGeometry.ProjectiveSpectrum.Basic
 
 universe u₁ u₂ u v
 
-open HomogeneousIdeal
+open GradedRingHom HomogeneousIdeal
 
+section GradedRingHom
 variable {A₁ A₂ A₃ : Type u} [CommRing A₁] [CommRing A₂] [CommRing A₃]
   {σ₁ σ₂ σ₃ : Type*} [SetLike σ₁ A₁] [AddSubgroupClass σ₁ A₁]
   [SetLike σ₂ A₂] [AddSubgroupClass σ₂ A₂] [SetLike σ₃ A₃] [AddSubgroupClass σ₃ A₃]
   {𝒜₁ : ℕ → σ₁} {𝒜₂ : ℕ → σ₂} {𝒜₃ : ℕ → σ₃} [GradedRing 𝒜₁] [GradedRing 𝒜₂] [GradedRing 𝒜₃]
-  (g : 𝒜₂ →+*ᵍ 𝒜₃) (f : 𝒜₁ →+*ᵍ 𝒜₂) (hg : g.Admissible) (hf : f.Admissible)
+  {F : Type*} [GradedFunLike F 𝒜₁ 𝒜₂] [RingHomClass F A₁ A₂]
+  (f : F) (hf : Admissible f)
 
 namespace ProjectiveSpectrum
 
@@ -184,7 +186,7 @@ Spec A₂[f(s)⁻¹]₀ ⟶ Spec A₁[s⁻¹]₀
 ```
 -/
 @[reassoc] theorem awayι_comp_map {i : ℕ} (hi : 0 < i) (s : A₁) (hs : s ∈ 𝒜₁ i) :
-    awayι 𝒜₂ (f s) (f.2 hs) hi ≫ map f hf =
+    awayι 𝒜₂ (f s) (map_mem f hs) hi ≫ map f hf =
     Spec.map (CommRingCat.ofHom (Away.map f (by rfl))) ≫ awayι 𝒜₁ s hs hi := by
   rw [awayι, awayι, Category.assoc, ι_comp_map, ← Category.assoc, ← Category.assoc]
   congr 1
@@ -194,7 +196,7 @@ Spec A₂[f(s)⁻¹]₀ ⟶ Spec A₁[s⁻¹]₀
 
 @[simps! I₀ f] noncomputable def mapAffineOpenCover : (Proj 𝒜₂).AffineOpenCover :=
   Proj.affineOpenCoverOfIrrelevantLESpan _ (fun s : (affineOpenCover 𝒜₁).I₀ ↦ f s.2)
-    (fun s ↦ f.2 s.2.2) (fun s ↦ s.1.2) <|
+    (fun s ↦ map_mem f s.2.2) (fun s ↦ s.1.2) <|
     (HomogeneousIdeal.toIdeal_le_toIdeal_iff.mpr hf.1).trans <|
     Ideal.map_le_of_le_comap <| (HomogeneousIdeal.irrelevant_toIdeal_le _).mpr fun i hi x hx ↦
     Ideal.subset_span ⟨⟨⟨i, hi⟩, ⟨x, hx⟩⟩, rfl⟩
@@ -211,9 +213,12 @@ Spec A₂[f(s)⁻¹]₀ ⟶ Spec A₁[s⁻¹]₀
   simp [awayι_comp_map_assoc _ _ s.1.2 (s.2 : A₁) s.2.2, awayι_toSpecZero, awayι_toSpecZero_assoc,
     ← Spec.map_comp, ← CommRingCat.ofHom_comp]
 
-variable {f g}
+@[simp] theorem map_coe' (hf : Admissible (f : 𝒜₁ →+*ᵍ 𝒜₂)) :
+    map (f : 𝒜₁ →+*ᵍ 𝒜₂) hf = map f hf.of_coe := rfl
 
-theorem map_comp :
+theorem map_coe : map (f : 𝒜₁ →+*ᵍ 𝒜₂) hf.coe = map f hf := rfl
+
+theorem map_comp {g : 𝒜₂ →+*ᵍ 𝒜₃} {f : 𝒜₁ →+*ᵍ 𝒜₂} (hg : Admissible g) (hf : Admissible f) :
     map (g.comp f) (hg.comp hf) = map g hg ≫ map f hf := by
   refine (mapAffineOpenCover _ <| hg.comp hf).openCover.hom_ext _ _
     fun s ↦ ?_
@@ -231,11 +236,11 @@ theorem map_comp :
   conv => enter [2]; exact Away.map_of ..
   exact Away.map_of ..
 
-theorem map_id : map (.id 𝒜₁) .id = 𝟙 (Proj 𝒜₁) := by
+theorem map_id : map (GradedRingHom.id 𝒜₁) .id = 𝟙 (Proj 𝒜₁) := by
   refine (affineOpenCover _).openCover.hom_ext _ _ fun s ↦ ?_
   simp only [affineOpenCover, Proj.affineOpenCoverOfIrrelevantLESpan,
     Scheme.AffineOpenCover.openCover_X, Scheme.AffineOpenCover.openCover_f, Category.comp_id]
-  conv_lhs => exact awayι_comp_map (.id 𝒜₁) _ _ _ s.2.2
+  conv_lhs => exact awayι_comp_map (GradedRingHom.id 𝒜₁) _ _ _ s.2.2
   conv_rhs => exact (Category.id_comp _).symm
   congr 1
   rw [Spec.map_eq_id]
@@ -249,12 +254,46 @@ theorem map_id : map (.id 𝒜₁) .id = 𝟙 (Proj 𝒜₁) := by
   hom := Proj.map _ e.symm.admissible
   inv := Proj.map _ e.admissible
   hom_inv_id := by
-    rw [← map_comp, ← map_id]
+    rw [← map_coe, ← map_coe e, ← map_comp, ← map_id]
     congr 1
     simp
   inv_hom_id := by
-    rw [← map_comp, ← map_id]
+    rw [← map_coe, ← map_coe e.symm, ← map_comp, ← map_id]
     congr 1
     simp
 
 end AlgebraicGeometry.Proj
+
+end GradedRingHom
+
+section GradedAlgHom
+variable {R R₁ R₂ A₁ A₂ : Type u} [CommRing A₁] [CommRing A₂]
+  [CommRing R₁] [CommRing R₂] [Algebra R₁ A₁] [Algebra R₂ A₂]
+  [CommRing R] [Algebra R R₁] [Algebra R R₂]
+  [Algebra R A₁] [Algebra R A₂] [IsScalarTower R R₁ A₁] [IsScalarTower R R₂ A₂]
+  {𝒜₁ : ℕ → Submodule R₁ A₁} {𝒜₂ : ℕ → Submodule R₂ A₂} [GradedRing 𝒜₁] [GradedRing 𝒜₂]
+  (f : 𝒜₁ →ₐᵍ[R] 𝒜₂) (hf : Admissible f)
+
+namespace AlgebraicGeometry.Proj
+
+open SpecOfNotation CategoryTheory CommRingCat
+
+variable (𝒜₁) in
+noncomputable def toSpec : Proj 𝒜₁ ⟶ Spec(R₁) :=
+  toSpecZero 𝒜₁ ≫ Spec.map (ofHom <| algebraMap R₁ (𝒜₁ 0))
+
+@[reassoc] theorem map_toSpec :
+    Proj.map f hf ≫ toSpec 𝒜₁ ≫ Spec.map (ofHom <| algebraMap R R₁) =
+    toSpec 𝒜₂ ≫ Spec.map (ofHom <| algebraMap R R₂) := by
+  simp only [toSpec, Category.assoc, ← Spec.map_comp, ← ofHom_comp, map_comp_toSpecZero_assoc]
+  congr 3; ext; simp [← IsScalarTower.algebraMap_apply]
+
+@[reassoc (attr := simp)] theorem map_toSpec'
+    [Algebra R₁ R₂] [Algebra R₁ A₂] [IsScalarTower R₁ R₂ A₂]
+    (f : 𝒜₁ →ₐᵍ[R₁] 𝒜₂) (hf : Admissible f) :
+    Proj.map f hf ≫ toSpec 𝒜₁ = toSpec 𝒜₂ ≫ Spec.map (ofHom <| algebraMap R₁ R₂) := by
+  simp [← map_toSpec f hf]
+
+end AlgebraicGeometry.Proj
+
+end GradedAlgHom

@@ -6,9 +6,10 @@ import EllipticCurve.CategoryTheory.FiberColimit
 import EllipticCurve.CategoryTheory.PresheafCostructured
 import EllipticCurve.Grassmannians.Basic
 import EllipticCurve.Lemmas
-import EllipticCurve.ProjectiveSpace.AlgebraHomogeneousLocalization
+import EllipticCurve.ProjectiveSpace.AlgebraHomogeneousLocalizationOld
 import EllipticCurve.ProjectiveSpace.Functor
 import EllipticCurve.ProjectiveSpace.Graded.Admissible
+import EllipticCurve.ProjectiveSpace.Graded.AlgEquiv
 import EllipticCurve.ProjectiveSpace.Graded.AlgHom
 import EllipticCurve.ProjectiveSpace.Graded.Bundled
 import EllipticCurve.ProjectiveSpace.Graded.FunLike
@@ -18,8 +19,9 @@ import EllipticCurve.ProjectiveSpace.Graded.Irrelevant
 import EllipticCurve.ProjectiveSpace.Graded.RingEquiv
 import EllipticCurve.ProjectiveSpace.Graded.RingHom
 import EllipticCurve.ProjectiveSpace.HomogeneousLocalizationMvPolynomial
-import EllipticCurve.ProjectiveSpace.ProjCongr
+import EllipticCurve.ProjectiveSpace.ProjCongrOld
 import EllipticCurve.ProjectiveSpace.Scheme
+import EllipticCurve.ProjectiveSpace.TensorProduct.Admissible
 import EllipticCurve.ProjectiveSpace.TensorProduct.BaseChange
 import EllipticCurve.ProjectiveSpace.TensorProduct.Decomposition
 import EllipticCurve.ProjectiveSpace.TensorProduct.DirectSum
