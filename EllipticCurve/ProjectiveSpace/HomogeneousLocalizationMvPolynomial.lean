@@ -3,7 +3,7 @@ Copyright (c) 2025 Kenny Lau. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau
 -/
-
+/-
 import EllipticCurve.ProjectiveSpace.AlgebraHomogeneousLocalization
 import Mathlib.RingTheory.GradedAlgebra.HomogeneousLocalization
 import Mathlib.RingTheory.MvPolynomial.Homogeneous
@@ -164,3 +164,4 @@ theorem expand_dehomogenise_monomial {σ R : Type*} [CommRing R] (i : σ) {d : �
     · simp only [map_mul, *, aeval_X, contract_mk, dehomogenise_X]
 
 end MvPolynomial
+-/
