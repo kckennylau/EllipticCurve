@@ -8,9 +8,12 @@ import EllipticCurve.Grassmannians.Basic
 import EllipticCurve.Lemmas
 import EllipticCurve.ProjectiveSpace.AlgebraHomogeneousLocalization
 import EllipticCurve.ProjectiveSpace.Functor
+import EllipticCurve.ProjectiveSpace.Graded.Admissible
 import EllipticCurve.ProjectiveSpace.Graded.AlgHom
+import EllipticCurve.ProjectiveSpace.Graded.Bundled
 import EllipticCurve.ProjectiveSpace.Graded.FunLike
 import EllipticCurve.ProjectiveSpace.Graded.Homogeneous
+import EllipticCurve.ProjectiveSpace.Graded.HomogeneousLocalization
 import EllipticCurve.ProjectiveSpace.Graded.Irrelevant
 import EllipticCurve.ProjectiveSpace.Graded.RingEquiv
 import EllipticCurve.ProjectiveSpace.Graded.RingHom
@@ -22,8 +25,11 @@ import EllipticCurve.ProjectiveSpace.TensorProduct.Decomposition
 import EllipticCurve.ProjectiveSpace.TensorProduct.DirectSum
 import EllipticCurve.ProjectiveSpace.TensorProduct.GradedAlgebra
 import EllipticCurve.ProjectiveSpace.TensorProduct.GradedAlgebraOld
+import EllipticCurve.ProjectiveSpace.TensorProduct.HomogeneousLocalization
 import EllipticCurve.ProjectiveSpace.TensorProduct.Proj
 import EllipticCurve.ProjectiveSpace.TensorProduct.ProjMap
+import EllipticCurve.ProjectiveSpace.TensorProduct.ProjMapOld
+import EllipticCurve.ProjectiveSpace.TensorProduct.ProjOld
 import EllipticCurve.ProjectiveSpace.TensorProduct.Submodule
 import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricMap
 import EllipticCurve.ProjectiveSpace.TensorProduct.SymmetricPower

@@ -276,7 +276,7 @@ section GradedRingHomClass
 variable [AddSubmonoidClass σ A] [AddSubmonoidClass τ B]
 
 section
-variable (𝒜 : ι → σ) (ℬ : ι → τ)
+variable {𝒜 : ι → σ} {ℬ : ι → τ}
 variable {F : Type*} [GradedFunLike F 𝒜 ℬ] [RingHomClass F A B]
 
 -- Note: if `GradedAddHom` is added later, then the assumptions can be relaxed.
@@ -289,23 +289,23 @@ variable {F : Type*} [GradedFunLike F 𝒜 ℬ] [RingHomClass F A B]
 end
 
 section
-variable [AddMonoid ι] (𝒜 : ι → σ) (ℬ : ι → τ) [SetLike.GradedMonoid 𝒜] [SetLike.GradedMonoid ℬ]
+variable [AddMonoid ι] {𝒜 : ι → σ} {ℬ : ι → τ} [SetLike.GradedMonoid 𝒜] [SetLike.GradedMonoid ℬ]
 variable {F : Type*} [GradedFunLike F 𝒜 ℬ] [RingHomClass F A B]
 
 /-- A graded ring homomorphism descends to a ring homomorphism on the zeroth component. -/
 @[simps!] def gradedZeroRingHom (f : F) : 𝒜 0 →+* ℬ 0 where
-  __ := gradedAddHom _ _ f 0
+  __ := gradedAddHom f 0
   map_one' := Subtype.ext <| map_one _
   map_mul' _ _ := Subtype.ext <| map_mul ..
 
 end
 
 section GradedRing
-variable [DecidableEq ι] [AddMonoid ι] (𝒜 : ι → σ) (ℬ : ι → τ) [GradedRing 𝒜] [GradedRing ℬ]
+variable [DecidableEq ι] [AddMonoid ι] {𝒜 : ι → σ} {ℬ : ι → τ} [GradedRing 𝒜] [GradedRing ℬ]
 variable {F : Type*} [GradedFunLike F 𝒜 ℬ] [RingHomClass F A B]
 
 @[simp] lemma decompose_map (f : F) {x : A} :
-    DirectSum.decompose ℬ (f x) = .map (gradedAddHom _ _ f) (.decompose 𝒜 x) := by
+    DirectSum.decompose ℬ (f x) = .map (gradedAddHom f) (.decompose 𝒜 x) := by
   classical
   rw [← DirectSum.sum_support_decompose 𝒜 x, map_sum, DirectSum.decompose_sum,
     DirectSum.decompose_sum, map_sum]

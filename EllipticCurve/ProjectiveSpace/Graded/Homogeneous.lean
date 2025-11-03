@@ -59,19 +59,19 @@ definitionally equal to the preimage. -/
 def comap (I : HomogeneousIdeal ℬ) : HomogeneousIdeal 𝒜 where
   __ := I.toIdeal.comap f
   is_homogeneous' n a ha := by
-    rw [Ideal.mem_comap, HomogeneousIdeal.mem_iff, map_coe_decompose 𝒜 ℬ]
+    rw [Ideal.mem_comap, HomogeneousIdeal.mem_iff, map_coe_decompose]
     exact I.2 _ ha
 
 variable {I I₁ I₂ I₃ : HomogeneousIdeal 𝒜} {J J₁ J₂ J₃ : HomogeneousIdeal ℬ}
-  {K : HomogeneousIdeal 𝒞}
+  {K : HomogeneousIdeal 𝒞} {f}
 
-lemma map_le_iff_le_comap :
-    I.map f ≤ J ↔ I ≤ J.comap f :=
-  Ideal.map_le_iff_le_comap
+lemma map_le_iff_le_comap : I.map f ≤ J ↔ I ≤ J.comap f := Ideal.map_le_iff_le_comap
 alias ⟨le_comap_of_map_le, map_le_of_le_comap⟩ := map_le_iff_le_comap
 
+variable (f)
+
 theorem gc_map_comap : GaloisConnection (map f) (comap f) := fun _ _ ↦
-  map_le_iff_le_comap f
+  map_le_iff_le_comap
 
 @[mono, aesop safe apply] lemma map_mono : Monotone (map f) := (gc_map_comap f).monotone_l
 

@@ -57,7 +57,7 @@ private lemma mem_of_map_mem' (e : 𝒜 ≃+*ᵍ ℬ) {i x} (h : e.toFun x ∈ �
   rw [DFinsupp.mem_support_iff, ← Subtype.coe_ne_coe, ZeroMemClass.coe_zero,
     ← e.toRingEquiv.map_ne_zero_iff] at hj
   let e' : 𝒜 →+*ᵍ ℬ := { e with map_one' := e.map_one, map_zero' := e.map_zero }
-  conv_lhs at hj => exact map_coe_decompose _ _ e'
+  conv_lhs at hj => exact map_coe_decompose e'
   conv_lhs at hj => enter [1,1]; exact DirectSum.decompose_of_mem _ h
   rw [DirectSum.of_eq_of_ne _ _ _ hij.symm] at hj
   exact (hj rfl).elim

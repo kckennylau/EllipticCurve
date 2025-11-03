@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau
 -/
 
+import EllipticCurve.ProjectiveSpace.Graded.AlgHom
 import EllipticCurve.ProjectiveSpace.TensorProduct.Decomposition
 import Mathlib.RingTheory.GradedAlgebra.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
@@ -18,6 +19,18 @@ deduce via unification the function `fun i ↦ (𝒜 i).baseChange S`.
 -/
 
 open TensorProduct Submodule SetLike
+
+
+section
+variable {ι R A : Type*} [DecidableEq ι] [AddMonoid ι]
+  [CommSemiring R] [Semiring A] [Algebra R A]
+  (𝒜 : ι → Submodule R A)
+  (S : Type*) [CommSemiring S] [Algebra R S]
+
+def Function.baseChange (i : ι) : Submodule S (S ⊗[R] A) :=
+  (𝒜 i).baseChange S
+
+end
 
 namespace GradedAlgebra
 
@@ -37,6 +50,9 @@ instance baseChange : GradedAlgebra fun i ↦ (𝒜 i).baseChange S where
     rintro - ⟨x, hx, rfl⟩ - ⟨y, hy, rfl⟩
     simpa using subset_span <| Set.mem_image_of_mem _ <| mul_mem_graded hx hy
 
+instance Function.instGradedAlgebraBaseChange : GradedAlgebra (𝒜.baseChange S) :=
+  inferInstanceAs (GradedAlgebra fun i ↦ (𝒜 i).baseChange S)
+
 instance : Semiring ((𝒜 0).baseChange S) :=
   GradeZero.instSemiring fun i ↦ (𝒜 i).baseChange S
 
@@ -45,6 +61,11 @@ instance : Algebra S ((𝒜 0).baseChange S) :=
 
 @[simp] lemma coe_algebraMap_apply (s : S) :
     (algebraMap _ ((𝒜 0).baseChange S) s : S ⊗[R] A) = s ⊗ₜ 1 := rfl
+
+/-- The inclusion `𝒜 → S ⊗ 𝒜`. -/
+def includeRight : 𝒜 →ₐᵍ[R] 𝒜.baseChange S where
+  __ := Algebra.TensorProduct.includeRight
+  map_mem' := Submodule.tmul_mem_baseChange_of_mem _
 
 end Semiring
 
