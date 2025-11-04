@@ -279,20 +279,15 @@ theorem finite_ofCover {X : CommRingCat.{u}ᵒᵖ}
   dsimp only at h₁ h₂; subst h₁
   rw [eqToHom_refl, id_comp] at h₂; subst h₂; rfl
 
-theorem _root_.AlgebraicGeometry.Scheme.exists_cover_of_mem_pretopology'
-    {P : MorphismProperty Scheme.{u}} [P.IsStableUnderBaseChange] [P.IsMultiplicative]
-    {X : Scheme.{u}} {R : Presieve X}
-    (h : R ∈ (pretopology P).coverings X) :
-    ∃ 𝒰 : Cover.{u} (precoverage P) X, R = ofArrows 𝒰.X 𝒰.f := sorry
-
+-- thanks to Christian Merten
 lemma zariskiTopology_eq_toGrothendieck_zariskiPretopology :
     zariskiTopology.{u} = zariskiPretopology.toGrothendieck := by
   unfold zariskiTopology Scheme.zariskiTopology
   ext X s
   constructor
   · rintro ⟨_, huo, hus⟩
-    obtain ⟨U : OpenCover (Spec _), rfl⟩ := exists_cover_of_mem_pretopology' huo
-    set U' := U.refinementSpec.finiteSubcover
+    obtain ⟨U : OpenCover (Spec _), rfl⟩ := exists_cover_of_mem_pretopology huo
+    set U' := U.ulift.refinementSpec.finiteSubcover
     refine ⟨.ofAffineCover U', ⟨?_, ?_, ?_⟩, ?_⟩
     · rintro _ _ ⟨j, rfl, rfl⟩
       rw [AffineOpenCover.finiteSubcover_f, Cover.refinementSpec_f,
@@ -303,9 +298,12 @@ lemma zariskiTopology_eq_toGrothendieck_zariskiPretopology :
     · exact finite_ofCover U'
     · rintro _ _ ⟨j', rfl, h⟩
       rw [eqToHom_refl, id_comp] at h; subst h
-      obtain ⟨j, f, hf, hfj⟩ := (U.refinementSpec.finiteSubcoverHom ≫ U.refinementSpecHom).exists j'
-      obtain ⟨Z, g, h, hsg, hjhg⟩ := hus _ ⟨j⟩
-      rw [← AffineOpenCover.openCover_f, ← hfj, hjhg, ← assoc, Spec.preimage_comp,
+      obtain ⟨j, f, hf, hfj⟩ :=
+        (U.ulift.refinementSpec.finiteSubcoverHom ≫ U.ulift.refinementSpecHom).exists j'
+      -- this should be `:= hus _ ⟨(U.idx j).choose⟩`, but then the `rw` fails below,
+      -- because `Cover.ulift` is bad (it does not use `Cover.idx`)
+      obtain ⟨Z, g, h, hsg, hjhg⟩ := hus _ ⟨(U.exists_eq j).choose⟩
+      rw [← AffineOpenCover.openCover_f, ← hfj, Cover.ulift_f, hjhg, ← assoc, Spec.preimage_comp,
         Scheme.Spec_map, Spec.preimage_map, op_comp, Quiver.Hom.op_unop]
       exact s.downward_closed hsg _
   · rintro ⟨p, ⟨std, surj, fin⟩, hsu⟩
